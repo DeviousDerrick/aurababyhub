@@ -1,800 +1,812 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>Movement Hub</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; padding: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        .screen { width: 100vw; height: 100vh; background: linear-gradient(135deg,#1e3a8a 0%,#581c87 50%,#312e81 100%); position: relative; overflow: hidden; }
-        .grid-bg { position: absolute; inset: 0; opacity: 0.2; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; }
-        .player { position: absolute; width: 48px; height: 48px; background: linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%); border-radius: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.6); transition: all 75ms; overflow: hidden; }
-        .hud { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 8px; }
-        .babies-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; margin-bottom: 8px; transition: all 0.2s; display: block; width: 100%; }
-        .admin-button { background: linear-gradient(90deg,#f97316 0%,#ef4444 100%); color: white; font-weight: bold; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; margin-top: 8px; transition: all 0.15s; display: block; width: 100%; }
-        .babies-button:hover, .admin-button:hover { transform: scale(1.03); }
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal { background: rgba(0,0,0,0.9); border: 2px solid rgba(34,211,238,0.5); border-radius: 16px; padding: 24px; max-width: 900px; width: 92%; max-height: 85vh; overflow: auto; color: white; }
-        .modal-title { color: #22d3ee; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 12px; }
-        .character-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; max-height: 60vh; overflow-y: auto; }
-        .character-option { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; }
-        .character-option:hover { border-color: #22d3ee; transform: scale(1.03); }
-        .character-option.selected { border-color: #22d3ee; background: rgba(34,211,238,0.12); box-shadow: 0 0 20px rgba(34,211,238,0.25); }
-        .character-image { width: 100%; height: 120px; object-fit: contain; margin-bottom: 8px; border-radius: 8px; background: rgba(255,255,255,0.03); }
-        .character-name { color: white; font-weight: bold; font-size: 14px; text-align: center; }
-        .close-modal { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.18); padding: 10px 16px; border-radius: 8px; cursor: pointer; margin-top: 12px; width: 100%; font-size: 14px; transition: all 0.15s; }
-        .close-modal:hover { background: rgba(255,255,255,0.12); }
-        .position { font-size: 11px; color: #9ca3af; margin-top: 8px; }
-        .username-label { position: absolute; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: #22d3ee; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; white-space: nowrap; pointer-events: none; transition: all 75ms; transform: translateX(-50%); }
-        .username-label.admin { background: linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff); color: white; box-shadow: 0 0 12px rgba(0,0,0,0.6); }
-        .center-container { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .welcome-box { background: rgba(0,0,0,0.5); backdrop-filter: blur(16px); border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; border: 1px solid rgba(255,255,255,0.18); }
-        .title { font-size: 36px; font-weight: bold; color: white; text-align: center; margin-bottom: 8px; }
-        .subtitle { color: #d1d5db; text-align: center; margin-bottom: 16px; }
-        .input { width: 100%; padding: 12px 16px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 16px; margin-bottom: 12px; outline: none; }
-        .input:focus { border-color: #22d3ee; box-shadow: 0 0 0 2px rgba(34,211,238,0.18); }
-        .input::placeholder { color: #9ca3af; }
-        .error { background: rgba(239,68,68,0.18); border: 1px solid #ef4444; color: #fecaca; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
-        .button { width: 100%; background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.18s; }
-        .button:hover { transform: translateY(-2px); }
-        .rules { margin-top: 12px; text-align: center; font-size: 12px; color: #9ca3af; }
-        .rules p { margin: 4px 0; }
-        /* Admin panel styles */
-        .admin-panel { display: flex; gap: 12px; }
-        .admin-column { flex: 1; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); max-height: 60vh; overflow: auto; }
-        .admin-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px dashed rgba(255,255,255,0.03); }
-        .admin-row .meta { display:flex; gap:8px; align-items:center; }
-        .small-btn { padding:6px 8px; border-radius:6px; border:none; cursor:pointer; background:rgba(255,255,255,0.06); color:white; font-size:13px; }
-        .small-btn.warn { background: linear-gradient(90deg,#f97316,#ef4444); }
-        .small-btn.ghost { background: rgba(255,255,255,0.04); }
-        .muted { color:#9ca3af; font-size:13px; }
-        .tab-row { display:flex; gap:8px; margin-bottom:8px; }
-        .tab { padding:6px 10px; border-radius:8px; background: rgba(255,255,255,0.03); cursor:pointer; font-weight:600; }
-        .tab.active { background: rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.15); color:#22d3ee; }
+              @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@800;900&display=swap');
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body { margin: 0; padding: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+              .screen { width: 100vw; height: 100vh; background: linear-gradient(135deg,#1e3a8a 0%,#581c87 50%,#312e81 100%); position: relative; overflow: hidden; }
+              .grid-bg { position: absolute; inset: 0; opacity: 0.2; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; }
+              .player { position: absolute; width: 48px; height: 48px; background: linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%); border-radius: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.6); transition: all 75ms; overflow: hidden; }
+              .hud { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 8px; }
+              .babies-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; margin-bottom: 8px; transition: all 0.2s; display: block; width: 100%; }
+              .admin-button { background: linear-gradient(90deg,#f97316 0%,#ef4444 100%); color: white; font-weight: bold; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; margin-top: 8px; transition: all 0.15s; display: block; width: 100%; }
+              .babies-button:hover, .admin-button:hover { transform: scale(1.03); }
+              .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+              .modal { background: rgba(0,0,0,0.9); border: 2px solid rgba(34,211,238,0.5); border-radius: 16px; padding: 24px; max-width: 900px; width: 92%; max-height: 85vh; overflow: auto; color: white; }
+              .modal-title { color: #22d3ee; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 12px; }
+              .character-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; max-height: 60vh; overflow-y: auto; }
+              .character-option { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; }
+              .character-option:hover { border-color: #22d3ee; transform: scale(1.03); }
+              .character-option.selected { border-color: #22d3ee; background: rgba(34,211,238,0.12); box-shadow: 0 0 20px rgba(34,211,238,0.25); }
+              .character-image { width: 100%; height: 120px; object-fit: contain; margin-bottom: 8px; border-radius: 8px; background: rgba(255,255,255,0.03); }
+              .character-name { color: white; font-weight: bold; font-size: 14px; text-align: center; }
+              .close-modal { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.18); padding: 10px 16px; border-radius: 8px; cursor: pointer; margin-top: 12px; width: 100%; font-size: 14px; transition: all 0.15s; }
+              .close-modal:hover { background: rgba(255,255,255,0.12); }
+              .position { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+              .username-label { position: absolute; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: #22d3ee; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; white-space: nowrap; pointer-events: none; transition: all 75ms; transform: translateX(-50%); }
+              .username-label.admin { background: linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff); color: white; box-shadow: 0 0 12px rgba(0,0,0,0.6); }
+              .center-container { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+              .welcome-box { background: rgba(0,0,0,0.5); backdrop-filter: blur(16px); border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; border: 1px solid rgba(255,255,255,0.18); }
+              .title { font-size: 36px; font-weight: bold; color: white; text-align: center; margin-bottom: 8px; }
+              .subtitle { color: #d1d5db; text-align: center; margin-bottom: 16px; }
+              .input { width: 100%; padding: 12px 16px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 16px; margin-bottom: 12px; outline: none; }
+              .input:focus { border-color: #22d3ee; box-shadow: 0 0 0 2px rgba(34,211,238,0.18); }
+              .input::placeholder { color: #9ca3af; }
+              .error { background: rgba(239,68,68,0.18); border: 1px solid #ef4444; color: #fecaca; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
+              .button { width: 100%; background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.18s; }
+              .button:hover { transform: translateY(-2px); }
+              .rules { margin-top: 12px; text-align: center; font-size: 12px; color: #9ca3af; }
+              .rules p { margin: 4px 0; }
+              /* Admin panel styles */
+              .admin-panel { display: flex; gap: 12px; }
+              .admin-column { flex: 1; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); max-height: 60vh; overflow: auto; }
+              .admin-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px dashed rgba(255,255,255,0.03); }
+              .admin-row .meta { display:flex; gap:8px; align-items:center; }
+              .small-btn { padding:6px 8px; border-radius:6px; border:none; cursor:pointer; background:rgba(255,255,255,0.06); color:white; font-size:13px; }
+              .small-btn.warn { background: linear-gradient(90deg,#f97316,#ef4444); }
+              .small-btn.ghost { background: rgba(255,255,255,0.04); }
+              .muted { color:#9ca3af; font-size:13px; }
+              .tab-row { display:flex; gap:8px; margin-bottom:8px; }
+              .tab { padding:6px 10px; border-radius:8px; background: rgba(255,255,255,0.03); cursor:pointer; font-weight:600; }
+              .tab.active { background: rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.15); color:#22d3ee; }
+              :root, html, body {
+        font-family: "Poppins", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        font-weight: 800;
+      }
+      *::before,
+      *::after {
+        font-family: inherit;
+        font-weight: 800 !important;
+      }
 
-        /* Moderation overlay (local) */
-        .mod-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 2000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0,0,0,0.85);
-            color: white;
-            flex-direction: column;
-        }
-        .mod-card {
-            text-align: center;
-            padding: 24px;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.08);
-            min-width: 320px;
-        }
-        .mod-title { font-size: 28px; font-weight: 800; color: #ff6b6b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .mod-desc { color: #e5e7eb; margin-bottom: 12px; }
-        .mod-countdown { font-size: 20px; font-weight: 700; color: #ffd166; margin-bottom: 12px; }
-        .flash-img {
-            width: 220px;
-            height: 220px;
-            object-fit: contain;
-            margin: 10px auto;
-            border-radius: 12px;
-            box-shadow: 0 6px 30px rgba(0,0,0,0.6);
-            animation: flashScale 1000ms infinite;
-            background: rgba(255,255,255,0.02);
-        }
-        @keyframes flashScale {
-            0% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
-            25% { transform: scale(1.06); opacity: 1; filter: hue-rotate(40deg); }
-            50% { transform: scale(1); opacity: 0.4; filter: hue-rotate(80deg); }
-            75% { transform: scale(1.04); opacity: 1; filter: hue-rotate(120deg); }
-            100% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
-        }
-        .mod-perm { color: #ff7b7b; font-weight: 700; margin-bottom: 10px; }
+              /* Moderation overlay (local) */
+              .mod-overlay {
+                  position: fixed;
+                  inset: 0;
+                  z-index: 2000;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: rgba(0,0,0,0.85);
+                  color: white;
+                  flex-direction: column;
+              }
+              .mod-card {
+                  text-align: center;
+                  padding: 24px;
+                  border-radius: 12px;
+                  background: rgba(0,0,0,0.5);
+                  border: 1px solid rgba(255,255,255,0.08);
+                  min-width: 320px;
+              }
+              .mod-title { font-size: 28px; font-weight: 800; color: #ff6b6b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+              .mod-desc { color: #e5e7eb; margin-bottom: 12px; }
+              .mod-countdown { font-size: 20px; font-weight: 700; color: #ffd166; margin-bottom: 12px; }
+              .flash-img {
+                  width: 220px;
+                  height: 220px;
+                  object-fit: contain;
+                  margin: 10px auto;
+                  border-radius: 12px;
+                  box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+                  animation: flashScale 1000ms infinite;
+                  background: rgba(255,255,255,0.02);
+              }
+              @keyframes flashScale {
+                  0% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
+                  25% { transform: scale(1.06); opacity: 1; filter: hue-rotate(40deg); }
+                  50% { transform: scale(1); opacity: 0.4; filter: hue-rotate(80deg); }
+                  75% { transform: scale(1.04); opacity: 1; filter: hue-rotate(120deg); }
+                  100% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
+              }
+              .mod-perm { color: #ff7b7b; font-weight: 700; margin-bottom: 10px; }
 
-        /* Top-center announcement */
-        .top-announcement {
-            position: fixed;
-            top: 18px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2100;
-            background: linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 6px 30px rgba(0,0,0,0.6);
-            max-width: 80%;
-            text-align: center;
-            font-weight: 700;
-            letter-spacing: 0.2px;
-            animation: slideIn 300ms ease;
-            font-size: 16px; /* medium size */
-        }
-        .announce-ban { color: #ff9b9b; }
-        .announce-timeout { color: #ffd58a; }
-        @keyframes slideIn {
-            from { transform: translateX(-50%) translateY(-6px); opacity: 0; }
-            to { transform: translateX(-50%) translateY(0); opacity: 1; }
-        }
+              /* Top-center announcement */
+              .top-announcement {
+                  position: fixed;
+                  top: 18px;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  z-index: 2100;
+                  background: linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
+                  color: #fff;
+                  padding: 12px 20px;
+                  border-radius: 10px;
+                  border: 1px solid rgba(255,255,255,0.08);
+                  box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+                  max-width: 80%;
+                  text-align: center;
+                  font-weight: 700;
+                  letter-spacing: 0.2px;
+                  animation: slideIn 300ms ease;
+                  font-size: 16px; /* medium size */
+              }
+              .announce-ban { color: #ff9b9b; }
+              .announce-timeout { color: #ffd58a; }
+              @keyframes slideIn {
+                  from { transform: translateX(-50%) translateY(-6px); opacity: 0; }
+                  to { transform: translateX(-50%) translateY(0); opacity: 1; }
+              }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="root"></div>
 
     <script type="module">
-        import React from 'https://cdn.skypack.dev/react@18.2.0';
-        import ReactDOM from 'https://cdn.skypack.dev/react-dom@18.2.0';
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, set, onValue, onDisconnect, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
-            authDomain: "s0lace-web.firebaseapp.com",
-            databaseURL: "https://s0lace-web-default-rtdb.firebaseio.com",
-            projectId: "s0lace-web",
-            storageBucket: "s0lace-web.firebasestorage.app",
-            messagingSenderId: "13647464646",
-            appId: "1:13647464646:web:87ecb82a32ab6f0efaafc7"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-
-        const { useState, useEffect, useRef } = React;
-
-        function MovementHub() {
-            const [username, setUsername] = useState(null);
-            const [inputUsername, setInputUsername] = useState('');
-            const [error, setError] = useState('');
-            const [position, setPosition] = useState({ x: 200, y: 200 });
-            const [showModal, setShowModal] = useState(false);
-            const [selectedCharacter, setSelectedCharacter] = useState('aurababy');
-            const [players, setPlayers] = useState({});
-            const [moderation, setModeration] = useState({ bans: {}, timeouts: {} });
-            const [showAdminModal, setShowAdminModal] = useState(false);
-            const [adminTab, setAdminTab] = useState('players'); // players | bans | timeouts
-
-            // announcement (top-center) { text, type } shown for 7s
-            const [announcement, setAnnouncement] = useState(null);
-            const announceTimeoutRef = useRef(null);
-
-            // moderation state for current user (null or {type, moderator, appliedAt, expiresAt})
-            const [selfModeration, setSelfModeration] = useState(null);
-            const [countdown, setCountdown] = useState(null);
-
-            const playerId = useRef(crypto.randomUUID());
-            const renderRef = useRef({});
-            const keysPressed = useRef({});
-            const animationFrame = useRef(null);
-
-            const SPEED = 4;
-
-            const characters = {
-                aurababy: { name: 'Aurababy', image: 'https://i.ibb.co/nq467xv6/aurababy.png' },
-                goonerbaby: { name: 'Goonerbaby', image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png' },
-                fattiebaby: { name: 'Fattie Baby', image: 'https://i.ibb.co/Kj0gKt2Q/fattiebaby.png' },
-                zoely: { name: 'Zoely', image: 'https://i.ibb.co/PsXr9KgX/zoely.png' },
-                hollybaby: { name: 'Holly Baby', image: 'https://i.ibb.co/DD8Py8yW/hollybaby.png' },
-                jollybaby: { name: 'Jolly Baby', image: 'https://i.ibb.co/8DNHS4n9/jollybaby.png' },
-
-                // admin-specific options
-                kingderrick_admin: { name: 'King Derrick', image: 'https://i.ibb.co/MyRFhbh7/kingderrick.png' },
-                grant_admin: { name: 'Grant', image: 'https://i.ibb.co/KjmZGy3V/grant.png' },
-                manny_admin: { name: 'Manny', image: 'https://i.ibb.co/0jjX9X56/manny.png' },
-                daniel_admin: { name: 'Daniel', image: 'https://i.ibb.co/Gf47wYjN/daniel.png' },
-                levi_admin: { name: 'Levi', image: 'https://i.ibb.co/XZPzfYNg/levi.png' },
-
-                // requested babies using the URLs you provided
-                judgmentbaby: { name: 'Judgment Baby', image: 'https://i.ibb.co/Kxp9Vhz7/judgment.jpg' },
-                baby_that_holds_aura: { name: 'The Baby That Holds Aura', image: 'https://i.ibb.co/jmTHJfh/The-Baby-That-Holds-Aura.jpg' },
-                gangsta_baby: { name: 'Gangsta Baby', image: 'https://i.ibb.co/m5hpwbnt/gangstababy.jpg' }
-            };
-
-            // Use judgment image for the ban/time-out flash overlay
-            const MOD_FLASH_IMAGE = 'https://i.ibb.co/Kxp9Vhz7/judgment.jpg';
-
-            const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
-            const ADMIN_PASSWORD = 'chickenfishfarting';
-
-            const badWords = [
-                'fuck','shit','damn','bitch','ass','asshole','bastard','crap',
-                'piss','dick','cock','pussy','hell','whore','slut','fag',
-                'nigger','nigga','retard','cunt','twat'
-            ];
-
-            const containsBadWord = (text) => {
-                const lowerText = text.toLowerCase();
-                return badWords.some(word => lowerText.includes(word));
-            };
-
-            // utility to convert duration labels to ms
-            const durationMs = (label) => {
-                switch (label) {
-                    case '10s': return 10 * 1000;
-                    case '1m': return 60 * 1000;
-                    case '10m': return 10 * 60 * 1000;
-                    case '1h': return 60 * 60 * 1000;
-                    case '1d': return 24 * 60 * 60 * 1000;
-                    case 'perm': return null;
-                    default: return null;
-                }
-            };
-
-            // show top-center announcement for 7s
-            const showAnnouncement = (text, type = 'info') => {
-                setAnnouncement({ text, type });
-                if (announceTimeoutRef.current) {
-                    clearTimeout(announceTimeoutRef.current);
-                }
-                announceTimeoutRef.current = setTimeout(() => {
-                    setAnnouncement(null);
-                    announceTimeoutRef.current = null;
-                }, 7000);
-            };
-
-            // check moderation entry validity (remove expired)
-            const validateAndFetchModerationEntry = async (path, key) => {
-                const nodeRef = ref(db, `${path}/${key}`);
-                const snap = await get(nodeRef);
-                if (!snap.exists()) return null;
-                const data = snap.val();
-                if (data.expiresAt && Date.now() > data.expiresAt) {
-                    // expired -> remove and return null
-                    await remove(nodeRef);
-                    return null;
-                }
-                return data;
-            };
-
-            // remove any player rows that match username (used when banning)
-            const removePlayerByUsername = async (target) => {
-                const lowerTarget = target.toLowerCase();
-                for (const [id, p] of Object.entries(players || {})) {
-                    if ((p.username || '').toLowerCase() === lowerTarget) {
-                        await set(ref(db, `players/${id}`), null);
-                    }
-                }
-            };
-
-            // Admin moderation actions
-            const applyModeration = async (targetUsername, type, durationLabel) => {
-                if (!username) return alert('You are not signed in as admin.');
-                const isAdmin = adminNames.includes((username || '').toLowerCase());
-                if (!isAdmin) return alert('Only admins can perform this action.');
-
-                const key = targetUsername.toLowerCase();
-                const ms = durationMs(durationLabel);
-                const now = Date.now();
-                const payload = {
-                    moderator: username,
-                    target: targetUsername,
-                    appliedAt: now,
-                    expiresAt: ms == null ? null : now + ms
-                };
-
-                if (type === 'ban') {
-                    await set(ref(db, `moderation/bans/${key}`), payload);
-                    await removePlayerByUsername(targetUsername);
-                    showAnnouncement(`${targetUsername} was BANNED by ${username}`, 'ban');
-                } else if (type === 'timeout') {
-                    await set(ref(db, `moderation/timeouts/${key}`), payload);
-                    await removePlayerByUsername(targetUsername);
-                    showAnnouncement(`${targetUsername} was TIMED OUT by ${username}`, 'timeout');
-                }
-            };
-
-            const removeModeration = async (targetUsername, type) => {
-                const key = targetUsername.toLowerCase();
-                if (type === 'ban') {
-                    await remove(ref(db, `moderation/bans/${key}`));
-                    showAnnouncement(`${targetUsername} was UNBANNED by ${username}`, 'info');
-                } else if (type === 'timeout') {
-                    await remove(ref(db, `moderation/timeouts/${key}`));
-                    showAnnouncement(`${targetUsername} timeout was REMOVED by ${username}`, 'info');
-                }
-            };
-
-            // Handle username submission with moderation checks
-            const handleUsernameSubmit = async (e) => {
-                if (e && e.preventDefault) e.preventDefault();
-                setError('');
-
-                const trimmedUsername = inputUsername.trim();
-
-                if (trimmedUsername.length < 3) {
-                    setError('Username must be at least 3 characters');
-                    return;
-                }
-                if (trimmedUsername.length > 20) {
-                    setError('Username must be 20 characters or less');
-                    return;
-                }
-                if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
-                    setError('Username can only contain letters, numbers, and underscores');
-                    return;
-                }
-                if (containsBadWord(trimmedUsername)) {
-                    setError('Username contains inappropriate language');
-                    return;
-                }
-
-                // Admin password check (case-insensitive username match)
-                const lower = trimmedUsername.toLowerCase();
-                if (adminNames.includes(lower)) {
-                    const pw = window.prompt('Enter admin password for ' + trimmedUsername + ':', '');
-                    if (pw !== ADMIN_PASSWORD) {
-                        setError('Incorrect admin password');
-                        return;
-                    }
-                }
-
-                // Check bans/timeouts
-                try {
-                    const ban = await validateAndFetchModerationEntry('moderation/bans', lower);
-                    if (ban) {
-                        if (ban.expiresAt == null) {
-                            setError('This username is permanently banned.');
-                            return;
-                        } else {
-                            const remaining = Math.max(0, ban.expiresAt - Date.now());
-                            setError(`You are banned for another ${Math.ceil(remaining / 1000)}s`);
-                            return;
-                        }
-                    }
-                    const timeout = await validateAndFetchModerationEntry('moderation/timeouts', lower);
-                    if (timeout) {
-                        const remaining = timeout.expiresAt ? Math.max(0, timeout.expiresAt - Date.now()) : null;
-                        if (remaining == null) {
-                            setError('This username is currently timed out (permanent).');
-                            return;
-                        } else {
-                            setError(`You are timed out for another ${Math.ceil(remaining / 1000)}s`);
-                            return;
-                        }
-                    }
-                } catch (err) {
-                    console.error('Moderation check error', err);
-                }
-
-                localStorage.setItem('movement_hub_username', trimmedUsername);
-                setUsername(trimmedUsername);
-            };
-
-            useEffect(() => {
-                const stored = localStorage.getItem('movement_hub_username');
-                if (stored) {
-                    setUsername(stored);
-                }
-            }, []);
-
-            // Listen for moderation lists (bans/timeouts) globally for admin panel usage
-            useEffect(() => {
-                const bansRef = ref(db, 'moderation/bans');
-                const timeoutsRef = ref(db, 'moderation/timeouts');
-
-                onValue(bansRef, snapshot => {
-                    const val = snapshot.val() || {};
-                    const next = {};
-                    for (const [k, v] of Object.entries(val)) {
-                        if (v.expiresAt && Date.now() > v.expiresAt) {
-                            remove(ref(db, `moderation/bans/${k}`));
-                        } else next[k] = v;
-                    }
-                    setModeration(prev => ({ ...prev, bans: next }));
-                });
-
-                onValue(timeoutsRef, snapshot => {
-                    const val = snapshot.val() || {};
-                    const next = {};
-                    for (const [k, v] of Object.entries(val)) {
-                        if (v.expiresAt && Date.now() > v.expiresAt) {
-                            remove(ref(db, `moderation/timeouts/${k}`));
-                        } else next[k] = v;
-                    }
-                    setModeration(prev => ({ ...prev, timeouts: next }));
-                });
-
-                // listeners live while app runs
-            }, []);
-
-            // Listen for moderation entries that apply specifically to the current user
-            useEffect(() => {
-                if (!username) return;
-                const lower = username.toLowerCase();
-                const banRef = ref(db, `moderation/bans/${lower}`);
-                const timeoutRef = ref(db, `moderation/timeouts/${lower}`);
-
-                onValue(banRef, snapshot => {
-                    const val = snapshot.val();
-                    if (val) {
-                        // enforce: remove player's DB entry so they're kicked
-                        set(ref(db, `players/${playerId.current}`), null);
-                        setSelfModeration({ type: 'ban', ...val });
-                    } else {
-                        setSelfModeration(prev => (prev && prev.type === 'ban' ? null : prev));
-                    }
-                });
-
-                onValue(timeoutRef, snapshot => {
-                    const val = snapshot.val();
-                    if (val) {
-                        set(ref(db, `players/${playerId.current}`), null);
-                        // ban should override timeout if present; keep ban if exists
-                        setSelfModeration(prev => (prev && prev.type === 'ban' ? prev : { type: 'timeout', ...val }));
-                    } else {
-                        setSelfModeration(prev => (prev && prev.type === 'timeout' ? null : prev));
-                    }
-                });
-
-            }, [username]);
-
-            useEffect(() => {
-                // countdown updater for selfModeration
-                if (!selfModeration) {
-                    setCountdown(null);
-                    return;
-                }
-                const update = () => {
-                    if (!selfModeration) return;
-                    if (!selfModeration.expiresAt) {
-                        setCountdown(null);
-                        return;
-                    }
-                    const remain = Math.max(0, selfModeration.expiresAt - Date.now());
-                    setCountdown(remain);
-                    if (remain <= 0) {
-                        setSelfModeration(null);
-                        setCountdown(null);
-                    }
-                };
-                update();
-                const id = setInterval(update, 1000);
-                return () => clearInterval(id);
-            }, [selfModeration]);
-
-            useEffect(() => {
-                if (!username) return;
-
-                const handleKeyDown = (e) => {
-                    // If moderated and still active, block movement keys
-                    const key = e.key.toLowerCase();
-                    if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) {
-                        if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
-                            e.preventDefault();
-                            return;
-                        }
-                        e.preventDefault();
-                        keysPressed.current[key] = true;
-                    }
-                };
-                const handleKeyUp = (e) => {
-                    const key = e.key.toLowerCase();
-                    keysPressed.current[key] = false;
-                };
-
-                const updatePosition = () => {
-                    // If moderated, skip movement entirely
-                    if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
-                        animationFrame.current = requestAnimationFrame(updatePosition);
-                        return;
-                    }
-
-                    setPosition(prev => {
-                        let moveX = 0, moveY = 0;
-                        if (keysPressed.current['w'] || keysPressed.current['arrowup']) moveY -= 1;
-                        if (keysPressed.current['s'] || keysPressed.current['arrowdown']) moveY += 1;
-                        if (keysPressed.current['a'] || keysPressed.current['arrowleft']) moveX -= 1;
-                        if (keysPressed.current['d'] || keysPressed.current['arrowright']) moveX += 1;
-
-                        if (moveX !== 0 && moveY !== 0) {
-                            const len = Math.sqrt(moveX*moveX + moveY*moveY);
-                            moveX = (moveX / len) * SPEED;
-                            moveY = (moveY / len) * SPEED;
-                        } else { moveX *= SPEED; moveY *= SPEED; }
-
-                        let newX = prev.x + moveX;
-                        let newY = prev.y + moveY;
-                        newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
-                        newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
-                        return { x: newX, y: newY };
-                    });
-
-                    animationFrame.current = requestAnimationFrame(updatePosition);
-                };
-
-                window.addEventListener('keydown', handleKeyDown);
-                window.addEventListener('keyup', handleKeyUp);
-                animationFrame.current = requestAnimationFrame(updatePosition);
-
-                return () => {
-                    window.removeEventListener('keydown', handleKeyDown);
-                    window.removeEventListener('keyup', handleKeyUp);
-                    if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
-                };
-            }, [username, selfModeration]);
-
-            // Join Firebase (only join if not currently moderated)
-            useEffect(() => {
-                if (!username) return;
-                // If moderated, don't write presence
-                if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
-                    set(ref(db, `players/${playerId.current}`), null);
-                    return;
-                }
-                const playerRef = ref(db, `players/${playerId.current}`);
-                set(playerRef, {
-                    username,
-                    x: position.x,
-                    y: position.y,
-                    character: selectedCharacter,
-                    admin: adminNames.includes(username.toLowerCase())
-                });
-                onDisconnect(playerRef).remove();
-            }, [username, selfModeration]);
-
-            // Sync position to Firebase (throttled) only when not moderated
-            useEffect(() => {
-                if (!username) return;
-                const playerRef = ref(db, `players/${playerId.current}`);
-                const interval = setInterval(() => {
-                    if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
-                        set(playerRef, null);
-                        return;
-                    }
-                    set(playerRef, {
-                        username,
-                        x: position.x,
-                        y: position.y,
-                        character: selectedCharacter,
-                        admin: adminNames.includes(username.toLowerCase())
-                    });
-                }, 66);
-                return () => clearInterval(interval);
-            }, [username, position.x, position.y, selectedCharacter, selfModeration]);
-
-            // Listen to all players
-            useEffect(() => {
-                const playersRef = ref(db, 'players');
-                return onValue(playersRef, snapshot => {
-                    setPlayers(snapshot.val() || {});
-                });
-            }, []);
-
-            // Smooth rendering for other players
-            useEffect(() => {
-                const next = {};
-                for (const [id, p] of Object.entries(players || {})) {
-                    if (id === playerId.current) {
-                        next[id] = { x: position.x, y: position.y, username, character: selectedCharacter, admin: adminNames.includes((username || '').toLowerCase()) };
-                    } else {
-                        const prev = renderRef.current[id] || p;
-                        next[id] = {
-                            x: prev.x + (p.x - prev.x) * 0.25,
-                            y: prev.y + (p.y - prev.y) * 0.25,
-                            username: p.username,
-                            character: p.character,
-                            admin: p.admin || adminNames.includes((p.username || '').toLowerCase())
-                        };
-                    }
-                }
-                renderRef.current = next;
-            }, [players, position, username, selectedCharacter]);
-
-            if (!username) {
-                return React.createElement('div', { className: 'screen center-container' },
-                    React.createElement('div', { className: 'welcome-box' },
-                        React.createElement('h1', { className: 'title' }, 'Welcome!'),
-                        React.createElement('p', { className: 'subtitle' }, 'Choose your username to begin'),
-                        React.createElement('form', { onSubmit: handleUsernameSubmit },
-                            React.createElement('input', {
-                                type: 'text', value: inputUsername, onChange: (e) => setInputUsername(e.target.value),
-                                placeholder: 'Enter username', className: 'input', maxLength: 20, autoFocus: true
-                            }),
-                            error && React.createElement('div', { className: 'error' }, error),
-                            React.createElement('button', { type: 'submit', className: 'button' }, 'Start Playing')
-                        ),
-                        React.createElement('div', { className: 'rules' },
-                            React.createElement('p', null, '• 3-20 characters'),
-                            React.createElement('p', null, '• Letters, numbers, and underscores only'),
-                            React.createElement('p', null, '• No inappropriate language')
-                        )
-                    )
-                );
-            }
-
-            const isAdminUser = adminNames.includes((username || '').toLowerCase());
-            const uniquePlayerUsernames = [...new Set(Object.values(players || {}).map(p => p.username).filter(Boolean))];
-
-            // Helper to format countdown ms into readable string
-            const formatRemaining = (ms) => {
-                if (ms == null) return 'Permanent';
-                if (ms <= 1000) return '0s';
-                const totalSec = Math.ceil(ms / 1000);
-                if (totalSec < 60) return `${totalSec}s`;
-                const minutes = Math.floor(totalSec / 60);
-                const seconds = totalSec % 60;
-                if (minutes < 60) return `${minutes}:${String(seconds).padStart(2,'0')}`;
-                const hours = Math.floor(minutes / 60);
-                const minsRem = minutes % 60;
-                if (hours < 24) return `${hours}h ${minsRem}m`;
-                const days = Math.floor(hours / 24);
-                return `${days}d`;
-            };
-
-            return React.createElement('div', { className: 'screen' },
-                React.createElement('div', { className: 'grid-bg' }),
-
-                // Top-center announcement
-                announcement && React.createElement('div', {
-                    className: `top-announcement ${announcement.type === 'ban' ? 'announce-ban' : announcement.type === 'timeout' ? 'announce-timeout' : ''}`
-                }, announcement.text),
-
-                // Render all players
-                Object.entries(renderRef.current).map(([id, p]) =>
-                    React.createElement(React.Fragment, { key: id },
-                        React.createElement('div', {
-                            className: 'player',
-                            style: { left: `${p.x}px`, top: `${p.y}px` }
-                        },
-                            React.createElement('img', {
-                                src: characters[p.character]?.image || characters['aurababy'].image,
-                                alt: p.character,
-                                style: { width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' },
-                                onError: (e) => { e.target.src = characters['aurababy'].image; }
-                            })
-                        ),
-                        React.createElement('div', {
-                            className: 'username-label' + (p.admin ? ' admin' : ''),
-                            style: { left: `${p.x + 24}px`, top: `${p.y + 58}px` }
-                        }, p.username)
-                    )
-                ),
-
-                // HUD
-                React.createElement('div', { className: 'hud' },
-                    React.createElement('button', { className: 'babies-button', onClick: () => setShowModal(true) }, '👶 Babies'),
-                    isAdminUser && React.createElement('button', { className: 'admin-button', onClick: () => setShowAdminModal(true) }, '🔧 Admin Panel'),
-                    React.createElement('div', { className: 'position' }, `(${Math.round(position.x)}, ${Math.round(position.y)})`)
-                ),
-
-                // Character modal
-                showModal && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowModal(false) },
-                    React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
-                        React.createElement('div', { className: 'modal-title' }, 'Choose Your Character'),
-                        React.createElement('div', { className: 'character-grid' },
-                            Object.keys(characters).map(key =>
-                                React.createElement('div', {
-                                    key,
-                                    className: `character-option ${selectedCharacter === key ? 'selected' : ''}`,
-                                    onClick: () => {
-                                        setSelectedCharacter(key);
-                                        set(ref(db, `players/${playerId.current}`), {
-                                            username,
-                                            x: position.x,
-                                            y: position.y,
-                                            character: key,
-                                            admin: adminNames.includes(username.toLowerCase())
-                                        });
-                                        setShowModal(false);
-                                    }
-                                },
-                                    React.createElement('img', { src: characters[key].image, alt: characters[key].name, className: 'character-image', onError: (e)=>{ e.target.src = characters['aurababy'].image; } }),
-                                    React.createElement('div', { className: 'character-name' }, characters[key].name)
-                                )
-                            )
-                        ),
-                        React.createElement('button', { className: 'close-modal', onClick: () => setShowModal(false) }, 'Close')
-                    )
-                ),
-
-                // Admin modal
-                showAdminModal && isAdminUser && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowAdminModal(false) },
-                    React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
-                        React.createElement('div', { className: 'modal-title' }, 'Admin Panel'),
-                        React.createElement('div', { className: 'tab-row' },
-                            React.createElement('div', { className: `tab ${adminTab === 'players' ? 'active' : ''}`, onClick: () => setAdminTab('players') }, 'Players'),
-                            React.createElement('div', { className: `tab ${adminTab === 'bans' ? 'active' : ''}`, onClick: () => setAdminTab('bans') }, `Ban List (${Object.keys(moderation.bans || {}).length})`),
-                            React.createElement('div', { className: `tab ${adminTab === 'timeouts' ? 'active' : ''}`, onClick: () => setAdminTab('timeouts') }, `Timeouts (${Object.keys(moderation.timeouts || {}).length})`)
-                        ),
-
-                        adminTab === 'players' && React.createElement('div', { className: 'admin-panel' },
-                            React.createElement('div', { className: 'admin-column' },
-                                React.createElement('div', { className: 'muted' }, `Active players (${uniquePlayerUsernames.length})`),
-                                uniquePlayerUsernames.map(u =>
-                                    React.createElement('div', { className: 'admin-row', key: u },
-                                        React.createElement('div', { className: 'meta' },
-                                            React.createElement('div', { style: { fontWeight: 700 } }, u),
-                                            moderation.bans[u.toLowerCase()] && React.createElement('div', { className: 'muted' }, '• banned'),
-                                            moderation.timeouts[u.toLowerCase()] && React.createElement('div', { className: 'muted' }, '• timed out')
-                                        ),
-                                        React.createElement('div', null,
-                                            React.createElement('button', { className: 'small-btn ghost', onClick: () => {
-                                                const choice = window.prompt('Ban duration: (10s,1m,10m,1h,1d,perm)', '10s');
-                                                if (choice) applyModeration(u, 'ban', choice);
-                                            } }, 'Ban'),
-                                            React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
-                                                const choice = window.prompt('Timeout duration: (10s,1m,10m,1h,1d,perm)', '1m');
-                                                if (choice) applyModeration(u, 'timeout', choice);
-                                            } }, 'Timeout'),
-                                            React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
-                                                const doUnban = window.confirm(`Unban ${u}?`);
-                                                if (doUnban) removeModeration(u, 'ban');
-                                            } }, 'Unban'),
-                                            React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
-                                                const doUn = window.confirm(`Remove timeout for ${u}?`);
-                                                if (doUn) removeModeration(u, 'timeout');
-                                            } }, 'Remove Timeout')
-                                        )
-                                    )
-                                )
-                            )
-                        ),
-
-                        adminTab === 'bans' && React.createElement('div', { className: 'admin-panel' },
-                            React.createElement('div', { className: 'admin-column' },
-                                React.createElement('div', { className: 'muted' }, 'Banned users'),
-                                Object.entries(moderation.bans || {}).length === 0 && React.createElement('div', { className: 'muted' }, 'No banned users'),
-                                Object.entries(moderation.bans || {}).map(([k, v]) =>
-                                    React.createElement('div', { className: 'admin-row', key: k },
-                                        React.createElement('div', { className: 'meta' },
-                                            React.createElement('div', { style: { fontWeight: 700 } }, k),
-                                            React.createElement('div', { className: 'muted' }, v.moderator ? ` by ${v.moderator}` : '')
-                                        ),
-                                        React.createElement('div', null,
-                                            React.createElement('button', { className: 'small-btn', onClick: () => removeModeration(k, 'ban') }, 'Unban')
-                                        )
-                                    )
-                                )
-                            )
-                        ),
-
-                        adminTab === 'timeouts' && React.createElement('div', { className: 'admin-panel' },
-                            React.createElement('div', { className: 'admin-column' },
-                                React.createElement('div', { className: 'muted' }, 'Timed out users'),
-                                Object.entries(moderation.timeouts || {}).length === 0 && React.createElement('div', { className: 'muted' }, 'No timeouts'),
-                                Object.entries(moderation.timeouts || {}).map(([k, v]) =>
-                                    React.createElement('div', { className: 'admin-row', key: k },
-                                        React.createElement('div', { className: 'meta' },
-                                            React.createElement('div', { style: { fontWeight: 700 } }, k),
-                                            React.createElement('div', { className: 'muted' }, v.moderator ? ` by ${v.moderator}` : '')
-                                        ),
-                                        React.createElement('div', null,
-                                            React.createElement('button', { className: 'small-btn', onClick: () => removeModeration(k, 'timeout') }, 'Remove Timeout')
-                                        )
-                                    )
-                                )
-                            )
-                        ),
-
-                        React.createElement('div', { style: { marginTop: 12 } },
-                            React.createElement('button', { className: 'close-modal', onClick: () => setShowAdminModal(false) }, 'Close Admin Panel')
-                        )
-                    )
-                ),
-
-                // Moderation overlay for the local user (if they are banned/timeout)
-                selfModeration && React.createElement('div', { className: 'mod-overlay' },
-                    React.createElement('div', { className: 'mod-card' },
-                        React.createElement('div', { className: 'mod-title' }, selfModeration.type === 'ban' ? 'Banned' : 'Timed Out'),
-                        selfModeration.expiresAt == null
-                            ? React.createElement('div', { className: 'mod-perm' }, 'This is permanent.')
-                            : React.createElement('div', { className: 'mod-desc' }, `You will be able to rejoin when the timer ends.`),
-                        React.createElement('img', { className: 'flash-img', src: MOD_FLASH_IMAGE, alt: 'moderation flash', onError: (e)=>{ e.target.style.display='none'; } }),
-                        selfModeration.expiresAt == null
-                            ? React.createElement('div', { className: 'mod-countdown' }, 'Permanent')
-                            : React.createElement('div', { className: 'mod-countdown' }, formatRemaining(countdown)),
-                        React.createElement('div', { className: 'mod-desc' }, selfModeration.moderator ? `Moderator: ${selfModeration.moderator}` : '')
-                    )
-                )
-            );
-        }
-
-        ReactDOM.render(React.createElement(MovementHub), document.getElementById('root'));
+      import React from 'https://cdn.skypack.dev/react@18.2.0';
+      import ReactDOM from 'https://cdn.skypack.dev/react-dom@18.2.0';
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getDatabase, ref, set, onValue, onDisconnect, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+      const firebaseConfig = {
+          apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
+          authDomain: "s0lace-web.firebaseapp.com",
+          databaseURL: "https://s0lace-web-default-rtdb.firebaseio.com",
+          projectId: "s0lace-web",
+          storageBucket: "s0lace-web.firebasestorage.app",
+          messagingSenderId: "13647464646",
+          appId: "1:13647464646:web:87ecb82a32ab6f0efaafc7"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      const { useState, useEffect, useRef } = React;
+
+      function MovementHub() {
+          const [username, setUsername] = useState(null);
+          const [inputUsername, setInputUsername] = useState('');
+          const [error, setError] = useState('');
+          const [position, setPosition] = useState({ x: 200, y: 200 });
+          const [showModal, setShowModal] = useState(false);
+          const [selectedCharacter, setSelectedCharacter] = useState('aurababy');
+          const [players, setPlayers] = useState({});
+          const [moderation, setModeration] = useState({ bans: {}, timeouts: {} });
+          const [showAdminModal, setShowAdminModal] = useState(false);
+          const [adminTab, setAdminTab] = useState('players'); // players | bans | timeouts
+
+          // announcement (top-center) { text, type } shown for 7s
+          const [announcement, setAnnouncement] = useState(null);
+          const announceTimeoutRef = useRef(null);
+
+          // moderation state for current user (null or {type, moderator, appliedAt, expiresAt})
+          const [selfModeration, setSelfModeration] = useState(null);
+          const [countdown, setCountdown] = useState(null);
+
+          const playerId = useRef(crypto.randomUUID());
+          const renderRef = useRef({});
+          const keysPressed = useRef({});
+          const animationFrame = useRef(null);
+
+          const SPEED = 4;
+
+          const characters = {
+              aurababy: { name: 'Aurababy', image: 'https://i.ibb.co/nq467xv6/aurababy.png' },
+              goonerbaby: { name: 'Goonerbaby', image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png' },
+              fattiebaby: { name: 'Fattie Baby', image: 'https://i.ibb.co/Kj0gKt2Q/fattiebaby.png' },
+              zoely: { name: 'Zoely', image: 'https://i.ibb.co/PsXr9KgX/zoely.png' },
+              hollybaby: { name: 'Holly Baby', image: 'https://i.ibb.co/DD8Py8yW/hollybaby.png' },
+              jollybaby: { name: 'Jolly Baby', image: 'https://i.ibb.co/8DNHS4n9/jollybaby.png' },
+
+              // admin-specific options
+              kingderrick_admin: { name: 'King Derrick', image: 'https://i.ibb.co/MyRFhbh7/kingderrick.png' },
+              grant_admin: { name: 'Grant', image: 'https://i.ibb.co/KjmZGy3V/grant.png' },
+              manny_admin: { name: 'Manny', image: 'https://i.ibb.co/0jjX9X56/manny.png' },
+              daniel_admin: { name: 'Daniel', image: 'https://i.ibb.co/Gf47wYjN/daniel.png' },
+              levi_admin: { name: 'Levi', image: 'https://i.ibb.co/XZPzfYNg/levi.png' },
+
+              // requested babies using the URLs you provided
+              judgmentbaby: { name: 'Judgment Baby', image: 'https://i.ibb.co/Kxp9Vhz7/judgment.jpg' },
+              baby_that_holds_aura: { name: 'The Baby That Holds Aura', image: 'https://i.ibb.co/jmTHJfh/The-Baby-That-Holds-Aura.jpg' },
+              gangsta_baby: { name: 'Gangsta Baby', image: 'https://i.ibb.co/m5hpwbnt/gangstababy.jpg' }
+          };
+
+          // Use judgment image for the ban/time-out flash overlay
+          const MOD_FLASH_IMAGE = 'https://i.ibb.co/Kxp9Vhz7/judgment.jpg';
+
+          const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
+          const ADMIN_PASSWORD = 'chickenfishfarting';
+
+          const badWords = [
+              'fuck','shit','damn','bitch','ass','asshole','bastard','crap',
+              'piss','dick','cock','pussy','hell','whore','slut','fag',
+              'nigger','nigga','retard','cunt','twat'
+          ];
+
+          const containsBadWord = (text) => {
+              const lowerText = text.toLowerCase();
+              return badWords.some(word => lowerText.includes(word));
+          };
+
+          // utility to convert duration labels to ms
+          const durationMs = (label) => {
+              switch (label) {
+                  case '10s': return 10 * 1000;
+                  case '1m': return 60 * 1000;
+                  case '10m': return 10 * 60 * 1000;
+                  case '1h': return 60 * 60 * 1000;
+                  case '1d': return 24 * 60 * 60 * 1000;
+                  case 'perm': return null;
+                  default: return null;
+              }
+          };
+
+          // show top-center announcement for 7s
+          const showAnnouncement = (text, type = 'info') => {
+              setAnnouncement({ text, type });
+              if (announceTimeoutRef.current) {
+                  clearTimeout(announceTimeoutRef.current);
+              }
+              announceTimeoutRef.current = setTimeout(() => {
+                  setAnnouncement(null);
+                  announceTimeoutRef.current = null;
+              }, 7000);
+          };
+
+          // check moderation entry validity (remove expired)
+          const validateAndFetchModerationEntry = async (path, key) => {
+              const nodeRef = ref(db, `${path}/${key}`);
+              const snap = await get(nodeRef);
+              if (!snap.exists()) return null;
+              const data = snap.val();
+              if (data.expiresAt && Date.now() > data.expiresAt) {
+                  // expired -> remove and return null
+                  await remove(nodeRef);
+                  return null;
+              }
+              return data;
+          };
+
+          // remove any player rows that match username (used when banning)
+          const removePlayerByUsername = async (target) => {
+              const lowerTarget = target.toLowerCase();
+              for (const [id, p] of Object.entries(players || {})) {
+                  if ((p.username || '').toLowerCase() === lowerTarget) {
+                      await set(ref(db, `players/${id}`), null);
+                  }
+              }
+          };
+
+          // Admin moderation actions
+          const applyModeration = async (targetUsername, type, durationLabel) => {
+              if (!username) return alert('You are not signed in as admin.');
+              const isAdmin = adminNames.includes((username || '').toLowerCase());
+              if (!isAdmin) return alert('Only admins can perform this action.');
+
+              const key = targetUsername.toLowerCase();
+              const ms = durationMs(durationLabel);
+              const now = Date.now();
+              const payload = {
+                  moderator: username,
+                  target: targetUsername,
+                  appliedAt: now,
+                  expiresAt: ms == null ? null : now + ms
+              };
+
+              if (type === 'ban') {
+                  await set(ref(db, `moderation/bans/${key}`), payload);
+                  await removePlayerByUsername(targetUsername);
+                  showAnnouncement(`${targetUsername} was BANNED by ${username}`, 'ban');
+              } else if (type === 'timeout') {
+                  await set(ref(db, `moderation/timeouts/${key}`), payload);
+                  await removePlayerByUsername(targetUsername);
+                  showAnnouncement(`${targetUsername} was TIMED OUT by ${username}`, 'timeout');
+              }
+          };
+
+          const removeModeration = async (targetUsername, type) => {
+              const key = targetUsername.toLowerCase();
+              if (type === 'ban') {
+                  await remove(ref(db, `moderation/bans/${key}`));
+                  showAnnouncement(`${targetUsername} was UNBANNED by ${username}`, 'info');
+              } else if (type === 'timeout') {
+                  await remove(ref(db, `moderation/timeouts/${key}`));
+                  showAnnouncement(`${targetUsername} timeout was REMOVED by ${username}`, 'info');
+              }
+          };
+
+          // Handle username submission with moderation checks
+          const handleUsernameSubmit = async (e) => {
+              if (e && e.preventDefault) e.preventDefault();
+              setError('');
+
+              const trimmedUsername = inputUsername.trim();
+
+              if (trimmedUsername.length < 3) {
+                  setError('Username must be at least 3 characters');
+                  return;
+              }
+              if (trimmedUsername.length > 20) {
+                  setError('Username must be 20 characters or less');
+                  return;
+              }
+              if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
+                  setError('Username can only contain letters, numbers, and underscores');
+                  return;
+              }
+              if (containsBadWord(trimmedUsername)) {
+                  setError('Username contains inappropriate language');
+                  return;
+              }
+
+              // Admin password check (case-insensitive username match)
+              const lower = trimmedUsername.toLowerCase();
+              if (adminNames.includes(lower)) {
+                  const pw = window.prompt('Enter admin password for ' + trimmedUsername + ':', '');
+                  if (pw !== ADMIN_PASSWORD) {
+                      setError('Incorrect admin password');
+                      return;
+                  }
+              }
+
+              // Check bans/timeouts
+              try {
+                  const ban = await validateAndFetchModerationEntry('moderation/bans', lower);
+                  if (ban) {
+                      if (ban.expiresAt == null) {
+                          setError('This username is permanently banned.');
+                          return;
+                      } else {
+                          const remaining = Math.max(0, ban.expiresAt - Date.now());
+                          setError(`You are banned for another ${Math.ceil(remaining / 1000)}s`);
+                          return;
+                      }
+                  }
+                  const timeout = await validateAndFetchModerationEntry('moderation/timeouts', lower);
+                  if (timeout) {
+                      const remaining = timeout.expiresAt ? Math.max(0, timeout.expiresAt - Date.now()) : null;
+                      if (remaining == null) {
+                          setError('This username is currently timed out (permanent).');
+                          return;
+                      } else {
+                          setError(`You are timed out for another ${Math.ceil(remaining / 1000)}s`);
+                          return;
+                      }
+                  }
+              } catch (err) {
+                  console.error('Moderation check error', err);
+              }
+
+              localStorage.setItem('movement_hub_username', trimmedUsername);
+              setUsername(trimmedUsername);
+          };
+
+          useEffect(() => {
+              const stored = localStorage.getItem('movement_hub_username');
+              if (stored) {
+                  setUsername(stored);
+              }
+          }, []);
+
+          // Listen for moderation lists (bans/timeouts) globally for admin panel usage
+          useEffect(() => {
+              const bansRef = ref(db, 'moderation/bans');
+              const timeoutsRef = ref(db, 'moderation/timeouts');
+
+              onValue(bansRef, snapshot => {
+                  const val = snapshot.val() || {};
+                  const next = {};
+                  for (const [k, v] of Object.entries(val)) {
+                      if (v.expiresAt && Date.now() > v.expiresAt) {
+                          remove(ref(db, `moderation/bans/${k}`));
+                      } else next[k] = v;
+                  }
+                  setModeration(prev => ({ ...prev, bans: next }));
+              });
+
+              onValue(timeoutsRef, snapshot => {
+                  const val = snapshot.val() || {};
+                  const next = {};
+                  for (const [k, v] of Object.entries(val)) {
+                      if (v.expiresAt && Date.now() > v.expiresAt) {
+                          remove(ref(db, `moderation/timeouts/${k}`));
+                      } else next[k] = v;
+                  }
+                  setModeration(prev => ({ ...prev, timeouts: next }));
+              });
+
+              // listeners live while app runs
+          }, []);
+
+          // Listen for moderation entries that apply specifically to the current user
+          useEffect(() => {
+              if (!username) return;
+              const lower = username.toLowerCase();
+              const banRef = ref(db, `moderation/bans/${lower}`);
+              const timeoutRef = ref(db, `moderation/timeouts/${lower}`);
+
+              onValue(banRef, snapshot => {
+                  const val = snapshot.val();
+                  if (val) {
+                      // enforce: remove player's DB entry so they're kicked
+                      set(ref(db, `players/${playerId.current}`), null);
+                      setSelfModeration({ type: 'ban', ...val });
+                  } else {
+                      setSelfModeration(prev => (prev && prev.type === 'ban' ? null : prev));
+                  }
+              });
+
+              onValue(timeoutRef, snapshot => {
+                  const val = snapshot.val();
+                  if (val) {
+                      set(ref(db, `players/${playerId.current}`), null);
+                      // ban should override timeout if present; keep ban if exists
+                      setSelfModeration(prev => (prev && prev.type === 'ban' ? prev : { type: 'timeout', ...val }));
+                  } else {
+                      setSelfModeration(prev => (prev && prev.type === 'timeout' ? null : prev));
+                  }
+              });
+
+          }, [username]);
+
+          useEffect(() => {
+              // countdown updater for selfModeration
+              if (!selfModeration) {
+                  setCountdown(null);
+                  return;
+              }
+              const update = () => {
+                  if (!selfModeration) return;
+                  if (!selfModeration.expiresAt) {
+                      setCountdown(null);
+                      return;
+                  }
+                  const remain = Math.max(0, selfModeration.expiresAt - Date.now());
+                  setCountdown(remain);
+                  if (remain <= 0) {
+                      setSelfModeration(null);
+                      setCountdown(null);
+                  }
+              };
+              update();
+              const id = setInterval(update, 1000);
+              return () => clearInterval(id);
+          }, [selfModeration]);
+
+          useEffect(() => {
+              if (!username) return;
+
+              const handleKeyDown = (e) => {
+                  // If moderated and still active, block movement keys
+                  const key = e.key.toLowerCase();
+                  if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) {
+                      if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                          e.preventDefault();
+                          return;
+                      }
+                      e.preventDefault();
+                      keysPressed.current[key] = true;
+                  }
+              };
+              const handleKeyUp = (e) => {
+                  const key = e.key.toLowerCase();
+                  keysPressed.current[key] = false;
+              };
+
+              const updatePosition = () => {
+                  // If moderated, skip movement entirely
+                  if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                      animationFrame.current = requestAnimationFrame(updatePosition);
+                      return;
+                  }
+
+                  setPosition(prev => {
+                      let moveX = 0, moveY = 0;
+                      if (keysPressed.current['w'] || keysPressed.current['arrowup']) moveY -= 1;
+                      if (keysPressed.current['s'] || keysPressed.current['arrowdown']) moveY += 1;
+                      if (keysPressed.current['a'] || keysPressed.current['arrowleft']) moveX -= 1;
+                      if (keysPressed.current['d'] || keysPressed.current['arrowright']) moveX += 1;
+
+                      if (moveX !== 0 && moveY !== 0) {
+                          const len = Math.sqrt(moveX*moveX + moveY*moveY);
+                          moveX = (moveX / len) * SPEED;
+                          moveY = (moveY / len) * SPEED;
+                      } else { moveX *= SPEED; moveY *= SPEED; }
+
+                      let newX = prev.x + moveX;
+                      let newY = prev.y + moveY;
+                      newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
+                      newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
+                      return { x: newX, y: newY };
+                  });
+
+                  animationFrame.current = requestAnimationFrame(updatePosition);
+              };
+
+              window.addEventListener('keydown', handleKeyDown);
+              window.addEventListener('keyup', handleKeyUp);
+              animationFrame.current = requestAnimationFrame(updatePosition);
+
+              return () => {
+                  window.removeEventListener('keydown', handleKeyDown);
+                  window.removeEventListener('keyup', handleKeyUp);
+                  if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
+              };
+          }, [username, selfModeration]);
+
+          // Join Firebase (only join if not currently moderated)
+          useEffect(() => {
+              if (!username) return;
+              // If moderated, don't write presence
+              if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                  set(ref(db, `players/${playerId.current}`), null);
+                  return;
+              }
+              const playerRef = ref(db, `players/${playerId.current}`);
+              set(playerRef, {
+                  username,
+                  x: position.x,
+                  y: position.y,
+                  character: selectedCharacter,
+                  admin: adminNames.includes(username.toLowerCase())
+              });
+              onDisconnect(playerRef).remove();
+          }, [username, selfModeration]);
+
+          // Sync position to Firebase (throttled) only when not moderated
+          useEffect(() => {
+              if (!username) return;
+              const playerRef = ref(db, `players/${playerId.current}`);
+              const interval = setInterval(() => {
+                  if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                      set(playerRef, null);
+                      return;
+                  }
+                  set(playerRef, {
+                      username,
+                      x: position.x,
+                      y: position.y,
+                      character: selectedCharacter,
+                      admin: adminNames.includes(username.toLowerCase())
+                  });
+              }, 66);
+              return () => clearInterval(interval);
+          }, [username, position.x, position.y, selectedCharacter, selfModeration]);
+
+          // Listen to all players
+          useEffect(() => {
+              const playersRef = ref(db, 'players');
+              return onValue(playersRef, snapshot => {
+                  setPlayers(snapshot.val() || {});
+              });
+          }, []);
+
+          // Smooth rendering for other players
+          useEffect(() => {
+              const next = {};
+              for (const [id, p] of Object.entries(players || {})) {
+                  if (id === playerId.current) {
+                      next[id] = { x: position.x, y: position.y, username, character: selectedCharacter, admin: adminNames.includes((username || '').toLowerCase()) };
+                  } else {
+                      const prev = renderRef.current[id] || p;
+                      next[id] = {
+                          x: prev.x + (p.x - prev.x) * 0.25,
+                          y: prev.y + (p.y - prev.y) * 0.25,
+                          username: p.username,
+                          character: p.character,
+                          admin: p.admin || adminNames.includes((p.username || '').toLowerCase())
+                      };
+                  }
+              }
+              renderRef.current = next;
+          }, [players, position, username, selectedCharacter]);
+
+          if (!username) {
+              return React.createElement('div', { className: 'screen center-container' },
+                  React.createElement('div', { className: 'welcome-box' },
+                      React.createElement('h1', { className: 'title' }, 'Welcome!'),
+                      React.createElement('p', { className: 'subtitle' }, 'Choose your username to begin'),
+                      React.createElement('form', { onSubmit: handleUsernameSubmit },
+                          React.createElement('input', {
+                              type: 'text', value: inputUsername, onChange: (e) => setInputUsername(e.target.value),
+                              placeholder: 'Enter username', className: 'input', maxLength: 20, autoFocus: true
+                          }),
+                          error && React.createElement('div', { className: 'error' }, error),
+                          React.createElement('button', { type: 'submit', className: 'button' }, 'Start Playing')
+                      ),
+                      React.createElement('div', { className: 'rules' },
+                          React.createElement('p', null, '• 3-20 characters'),
+                          React.createElement('p', null, '• Letters, numbers, and underscores only'),
+                          React.createElement('p', null, '• No inappropriate language')
+                      )
+                  )
+              );
+          }
+
+          const isAdminUser = adminNames.includes((username || '').toLowerCase());
+          const uniquePlayerUsernames = [...new Set(Object.values(players || {}).map(p => p.username).filter(Boolean))];
+
+          // Helper to format countdown ms into readable string
+          const formatRemaining = (ms) => {
+              if (ms == null) return 'Permanent';
+              if (ms <= 1000) return '0s';
+              const totalSec = Math.ceil(ms / 1000);
+              if (totalSec < 60) return `${totalSec}s`;
+              const minutes = Math.floor(totalSec / 60);
+              const seconds = totalSec % 60;
+              if (minutes < 60) return `${minutes}:${String(seconds).padStart(2,'0')}`;
+              const hours = Math.floor(minutes / 60);
+              const minsRem = minutes % 60;
+              if (hours < 24) return `${hours}h ${minsRem}m`;
+              const days = Math.floor(hours / 24);
+              return `${days}d`;
+          };
+
+          return React.createElement('div', { className: 'screen' },
+              React.createElement('div', { className: 'grid-bg' }),
+
+              // Top-center announcement
+              announcement && React.createElement('div', {
+                  className: `top-announcement ${announcement.type === 'ban' ? 'announce-ban' : announcement.type === 'timeout' ? 'announce-timeout' : ''}`
+              }, announcement.text),
+
+              // Render all players
+              Object.entries(renderRef.current).map(([id, p]) =>
+                  React.createElement(React.Fragment, { key: id },
+                      React.createElement('div', {
+                          className: 'player',
+                          style: { left: `${p.x}px`, top: `${p.y}px` }
+                      },
+                          React.createElement('img', {
+                              src: characters[p.character]?.image || characters['aurababy'].image,
+                              alt: p.character,
+                              style: { width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' },
+                              onError: (e) => { e.target.src = characters['aurababy'].image; }
+                          })
+                      ),
+                      React.createElement('div', {
+                          className: 'username-label' + (p.admin ? ' admin' : ''),
+                          style: { left: `${p.x + 24}px`, top: `${p.y + 58}px` }
+                      }, p.username)
+                  )
+              ),
+
+              // HUD
+              React.createElement('div', { className: 'hud' },
+                  React.createElement('button', { className: 'babies-button', onClick: () => setShowModal(true) }, '👶 Babies'),
+                  isAdminUser && React.createElement('button', { className: 'admin-button', onClick: () => setShowAdminModal(true) }, '🔧 Admin Panel'),
+                  React.createElement('div', { className: 'position' }, `(${Math.round(position.x)}, ${Math.round(position.y)})`)
+              ),
+
+              // Character modal
+              showModal && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowModal(false) },
+                  React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
+                      React.createElement('div', { className: 'modal-title' }, 'Choose Your Character'),
+                      React.createElement('div', { className: 'character-grid' },
+                          Object.keys(characters).map(key =>
+                              React.createElement('div', {
+                                  key,
+                                  className: `character-option ${selectedCharacter === key ? 'selected' : ''}`,
+                                  onClick: () => {
+                                      setSelectedCharacter(key);
+                                      set(ref(db, `players/${playerId.current}`), {
+                                          username,
+                                          x: position.x,
+                                          y: position.y,
+                                          character: key,
+                                          admin: adminNames.includes(username.toLowerCase())
+                                      });
+                                      setShowModal(false);
+                                  }
+                              },
+                                  React.createElement('img', { src: characters[key].image, alt: characters[key].name, className: 'character-image', onError: (e)=>{ e.target.src = characters['aurababy'].image; } }),
+                                  React.createElement('div', { className: 'character-name' }, characters[key].name)
+                              )
+                          )
+                      ),
+                      React.createElement('button', { className: 'close-modal', onClick: () => setShowModal(false) }, 'Close')
+                  )
+              ),
+
+              // Admin modal
+              showAdminModal && isAdminUser && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowAdminModal(false) },
+                  React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
+                      React.createElement('div', { className: 'modal-title' }, 'Admin Panel'),
+                      React.createElement('div', { className: 'tab-row' },
+                          React.createElement('div', { className: `tab ${adminTab === 'players' ? 'active' : ''}`, onClick: () => setAdminTab('players') }, 'Players'),
+                          React.createElement('div', { className: `tab ${adminTab === 'bans' ? 'active' : ''}`, onClick: () => setAdminTab('bans') }, `Ban List (${Object.keys(moderation.bans || {}).length})`),
+                          React.createElement('div', { className: `tab ${adminTab === 'timeouts' ? 'active' : ''}`, onClick: () => setAdminTab('timeouts') }, `Timeouts (${Object.keys(moderation.timeouts || {}).length})`)
+                      ),
+
+                      adminTab === 'players' && React.createElement('div', { className: 'admin-panel' },
+                          React.createElement('div', { className: 'admin-column' },
+                              React.createElement('div', { className: 'muted' }, `Active players (${uniquePlayerUsernames.length})`),
+                              uniquePlayerUsernames.map(u =>
+                                  React.createElement('div', { className: 'admin-row', key: u },
+                                      React.createElement('div', { className: 'meta' },
+                                          React.createElement('div', { style: { fontWeight: 700 } }, u),
+                                          moderation.bans[u.toLowerCase()] && React.createElement('div', { className: 'muted' }, '• banned'),
+                                          moderation.timeouts[u.toLowerCase()] && React.createElement('div', { className: 'muted' }, '• timed out')
+                                      ),
+                                      React.createElement('div', null,
+                                          React.createElement('button', { className: 'small-btn ghost', onClick: () => {
+                                              const choice = window.prompt('Ban duration: (10s,1m,10m,1h,1d,perm)', '10s');
+                                              if (choice) applyModeration(u, 'ban', choice);
+                                          } }, 'Ban'),
+                                          React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
+                                              const choice = window.prompt('Timeout duration: (10s,1m,10m,1h,1d,perm)', '1m');
+                                              if (choice) applyModeration(u, 'timeout', choice);
+                                          } }, 'Timeout'),
+                                          React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
+                                              const doUnban = window.confirm(`Unban ${u}?`);
+                                              if (doUnban) removeModeration(u, 'ban');
+                                          } }, 'Unban'),
+                                          React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
+                                              const doUn = window.confirm(`Remove timeout for ${u}?`);
+                                              if (doUn) removeModeration(u, 'timeout');
+                                          } }, 'Remove Timeout')
+                                      )
+                                  )
+                              )
+                          )
+                      ),
+
+                      adminTab === 'bans' && React.createElement('div', { className: 'admin-panel' },
+                          React.createElement('div', { className: 'admin-column' },
+                              React.createElement('div', { className: 'muted' }, 'Banned users'),
+                              Object.entries(moderation.bans || {}).length === 0 && React.createElement('div', { className: 'muted' }, 'No banned users'),
+                              Object.entries(moderation.bans || {}).map(([k, v]) =>
+                                  React.createElement('div', { className: 'admin-row', key: k },
+                                      React.createElement('div', { className: 'meta' },
+                                          React.createElement('div', { style: { fontWeight: 700 } }, k),
+                                          React.createElement('div', { className: 'muted' }, v.moderator ? ` by ${v.moderator}` : '')
+                                      ),
+                                      React.createElement('div', null,
+                                          React.createElement('button', { className: 'small-btn', onClick: () => removeModeration(k, 'ban') }, 'Unban')
+                                      )
+                                  )
+                              )
+                          )
+                      ),
+
+                      adminTab === 'timeouts' && React.createElement('div', { className: 'admin-panel' },
+                          React.createElement('div', { className: 'admin-column' },
+                              React.createElement('div', { className: 'muted' }, 'Timed out users'),
+                              Object.entries(moderation.timeouts || {}).length === 0 && React.createElement('div', { className: 'muted' }, 'No timeouts'),
+                              Object.entries(moderation.timeouts || {}).map(([k, v]) =>
+                                  React.createElement('div', { className: 'admin-row', key: k },
+                                      React.createElement('div', { className: 'meta' },
+                                          React.createElement('div', { style: { fontWeight: 700 } }, k),
+                                          React.createElement('div', { className: 'muted' }, v.moderator ? ` by ${v.moderator}` : '')
+                                      ),
+                                      React.createElement('div', null,
+                                          React.createElement('button', { className: 'small-btn', onClick: () => removeModeration(k, 'timeout') }, 'Remove Timeout')
+                                      )
+                                  )
+                              )
+                          )
+                      ),
+
+                      React.createElement('div', { style: { marginTop: 12 } },
+                          React.createElement('button', { className: 'close-modal', onClick: () => setShowAdminModal(false) }, 'Close Admin Panel')
+                      )
+                  )
+              ),
+
+              // Moderation overlay for the local user (if they are banned/timeout)
+              selfModeration && React.createElement('div', { className: 'mod-overlay' },
+                  React.createElement('div', { className: 'mod-card' },
+                      React.createElement('div', { className: 'mod-title' }, selfModeration.type === 'ban' ? 'Banned' : 'Timed Out'),
+                      selfModeration.expiresAt == null
+                          ? React.createElement('div', { className: 'mod-perm' }, 'This is permanent.')
+                          : React.createElement('div', { className: 'mod-desc' }, `You will be able to rejoin when the timer ends.`),
+                      React.createElement('img', { className: 'flash-img', src: MOD_FLASH_IMAGE, alt: 'moderation flash', onError: (e)=>{ e.target.style.display='none'; } }),
+                      selfModeration.expiresAt == null
+                          ? React.createElement('div', { className: 'mod-countdown' }, 'Permanent')
+                          : React.createElement('div', { className: 'mod-countdown' }, formatRemaining(countdown)),
+                      React.createElement('div', { className: 'mod-desc' }, selfModeration.moderator ? `Moderator: ${selfModeration.moderator}` : '')
+                  )
+              )
+          );
+      }
+
+      ReactDOM.render(React.createElement(MovementHub), document.getElementById('root'));
     </script>
-</body>
+  </body>
 </html>
