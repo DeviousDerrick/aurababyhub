@@ -1,1 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movement Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .screen {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3a8a 0%, #581c87 50%, #312e81 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        .grid-bg {
+            position: absolute;
+            inset: 0;
+            opacity: 0.2;
+            background-image: 
+                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        .player {
+            position: absolute;
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+            transition: all 75ms;
+        }
+        .player-border {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        .hud {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+        }
+        .babies-button {
+            background: linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%);
+            color: white;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+            display: block;
+            width: 100%;
+        }
+        .babies-button:hover {
+            background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%);
+            transform: scale(1.05);
+        }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid rgba(34, 211, 238, 0.5);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+        }
+        .modal-title {
+            color: #22d3ee;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .character-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .character-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .character-option:hover {
+            border-color: #22d3ee;
+            background: rgba(34, 211, 238, 0.1);
+            transform: scale(1.05);
+        }
+        .character-option.selected {
+            border-color: #22d3ee;
+            background: rgba(34, 211, 238, 0.2);
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+        }
+        .character-image {
+            width: 100%;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+        .character-name {
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+        }
+        .close-modal {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 24px;
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .close-modal:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .position {
+            font-size: 11px;
+            color: #9ca3af;
+        }
+        .username-label {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            color: #22d3ee;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            white-space: nowrap;
+            pointer-events: none;
+            transition: all 75ms;
+            transform: translateX(-50%);
+        }
+        .center-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .welcome-box {
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(16px);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            color: #d1d5db;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 16px;
+            margin-bottom: 16px;
+            outline: none;
+        }
+        .input:focus {
+            border-color: #22d3ee;
+            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.3);
+        }
+        .input::placeholder {
+            color: #9ca3af;
+        }
+        .error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #fecaca;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+        .button {
+            width: 100%;
+            background: linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%);
+            color: white;
+            font-weight: bold;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+        .button:hover {
+            background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%);
+        }
+        .rules {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        .rules p {
+            margin: 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
+    <script type="module">
+        import React from 'https://cdn.skypack.dev/react@18.2.0';
+        import ReactDOM from 'https://cdn.skypack.dev/react-dom@18.2.0';
+
+        const { useState, useEffect, useRef } = React;
+
+        function MovementHub() {
+            const [username, setUsername] = useState(null);
+            const [inputUsername, setInputUsername] = useState('');
+            const [error, setError] = useState('');
+            const [position, setPosition] = useState({ x: 200, y: 200 });
+            const [showModal, setShowModal] = useState(false);
+            const [selectedCharacter, setSelectedCharacter] = useState('aurababy');
+            const keysPressed = useRef({});
+            const animationFrame = useRef(null);
+
+            const SPEED = 4;
+
+            const characters = {
+                aurababy: {
+                    name: 'Aurababy',
+                    image: 'https://i.ibb.co/nq467xv6/aurababy.png'
+                },
+                goonerbaby: {
+                    name: 'Goonerbaby',
+                    image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png'
+                }
+            };
+
+            const badWords = [
+                'fuck', 'shit', 'damn', 'bitch', 'ass', 'asshole', 'bastard', 'crap',
+                'piss', 'dick', 'cock', 'pussy', 'hell', 'whore', 'slut', 'fag',
+                'nigger', 'nigga', 'retard', 'cunt', 'twat'
+            ];
+
+            const containsBadWord = (text) => {
+                const lowerText = text.toLowerCase();
+                return badWords.some(word => lowerText.includes(word));
+            };
+
+            const handleUsernameSubmit = (e) => {
+                e.preventDefault();
+                setError('');
+
+                const trimmedUsername = inputUsername.trim();
+
+                if (trimmedUsername.length < 3) {
+                    setError('Username must be at least 3 characters');
+                    return;
+                }
+                if (trimmedUsername.length > 20) {
+                    setError('Username must be 20 characters or less');
+                    return;
+                }
+                if (!/^[a-zA-Z0-9_]+$/.test(trimmedUsername)) {
+                    setError('Username can only contain letters, numbers, and underscores');
+                    return;
+                }
+                if (containsBadWord(trimmedUsername)) {
+                    setError('Username contains inappropriate language');
+                    return;
+                }
+
+                localStorage.setItem('movement_hub_username', trimmedUsername);
+                setUsername(trimmedUsername);
+            };
+
+            useEffect(() => {
+                const stored = localStorage.getItem('movement_hub_username');
+                if (stored) {
+                    setUsername(stored);
+                }
+            }, []);
+
+            useEffect(() => {
+                if (!username) return;
+
+                const handleKeyDown = (e) => {
+                    const key = e.key.toLowerCase();
+                    if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+                        e.preventDefault();
+                        keysPressed.current[key] = true;
+                    }
+                };
+
+                const handleKeyUp = (e) => {
+                    const key = e.key.toLowerCase();
+                    keysPressed.current[key] = false;
+                };
+
+                const updatePosition = () => {
+                    setPosition(prev => {
+                        let moveX = 0;
+                        let moveY = 0;
+
+                        if (keysPressed.current['w'] || keysPressed.current['arrowup']) {
+                            moveY -= 1;
+                        }
+                        if (keysPressed.current['s'] || keysPressed.current['arrowdown']) {
+                            moveY += 1;
+                        }
+                        if (keysPressed.current['a'] || keysPressed.current['arrowleft']) {
+                            moveX -= 1;
+                        }
+                        if (keysPressed.current['d'] || keysPressed.current['arrowright']) {
+                            moveX += 1;
+                        }
+
+                        if (moveX !== 0 && moveY !== 0) {
+                            const length = Math.sqrt(moveX * moveX + moveY * moveY);
+                            moveX = (moveX / length) * SPEED;
+                            moveY = (moveY / length) * SPEED;
+                        } else {
+                            moveX *= SPEED;
+                            moveY *= SPEED;
+                        }
+
+                        let newX = prev.x + moveX;
+                        let newY = prev.y + moveY;
+
+                        newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
+                        newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
+
+                        return { x: newX, y: newY };
+                    });
+
+                    animationFrame.current = requestAnimationFrame(updatePosition);
+                };
+
+                window.addEventListener('keydown', handleKeyDown);
+                window.addEventListener('keyup', handleKeyUp);
+                animationFrame.current = requestAnimationFrame(updatePosition);
+
+                return () => {
+                    window.removeEventListener('keydown', handleKeyDown);
+                    window.removeEventListener('keyup', handleKeyUp);
+                    if (animationFrame.current) {
+                        cancelAnimationFrame(animationFrame.current);
+                    }
+                };
+            }, [username]);
+
+            if (!username) {
+                return React.createElement('div', { className: 'screen center-container' },
+                    React.createElement('div', { className: 'welcome-box' },
+                        React.createElement('h1', { className: 'title' }, 'Welcome!'),
+                        React.createElement('p', { className: 'subtitle' }, 'Choose your username to begin'),
+                        React.createElement('form', { onSubmit: handleUsernameSubmit },
+                            React.createElement('input', {
+                                type: 'text',
+                                value: inputUsername,
+                                onChange: (e) => setInputUsername(e.target.value),
+                                placeholder: 'Enter username',
+                                className: 'input',
+                                maxLength: 20,
+                                autoFocus: true
+                            }),
+                            error && React.createElement('div', { className: 'error' }, error),
+                            React.createElement('button', {
+                                type: 'submit',
+                                className: 'button'
+                            }, 'Start Playing')
+                        ),
+                        React.createElement('div', { className: 'rules' },
+                            React.createElement('p', null, '• 3-20 characters'),
+                            React.createElement('p', null, '• Letters, numbers, and underscores only'),
+                            React.createElement('p', null, '• No inappropriate language')
+                        )
+                    )
+                );
+            }
+
+            return React.createElement('div', { className: 'screen' },
+                React.createElement('div', { className: 'grid-bg' }),
+                React.createElement('div', {
+                    className: 'player',
+                    style: { left: `${position.x}px`, top: `${position.y}px` }
+                },
+                    React.createElement('img', {
+                        src: characters[selectedCharacter].image,
+                        alt: characters[selectedCharacter].name,
+                        style: {
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain',
+                            borderRadius: '8px'
+                        }
+                    })
+                ),
+                React.createElement('div', {
+                    className: 'username-label',
+                    style: { 
+                        left: `${position.x + 24}px`, 
+                        top: `${position.y + 58}px`
+                    }
+                }, username),
+                React.createElement('div', { className: 'hud' },
+                    React.createElement('button', { 
+                        className: 'babies-button',
+                        onClick: () => setShowModal(true)
+                    }, '👶 Babies'),
+                    React.createElement('div', { className: 'position' }, 
+                        `(${Math.round(position.x)}, ${Math.round(position.y)})`
+                    )
+                ),
+                showModal && React.createElement('div', { 
+                    className: 'modal-overlay',
+                    onClick: () => setShowModal(false)
+                },
+                    React.createElement('div', {
+                        className: 'modal',
+                        onClick: (e) => e.stopPropagation()
+                    },
+                        React.createElement('div', { className: 'modal-title' }, 'Choose Your Character'),
+                        React.createElement('div', { className: 'character-grid' },
+                            React.createElement('div', {
+                                className: `character-option ${selectedCharacter === 'aurababy' ? 'selected' : ''}`,
+                                onClick: () => {
+                                    setSelectedCharacter('aurababy');
+                                    setShowModal(false);
+                                }
+                            },
+                                React.createElement('img', {
+                                    src: characters.aurababy.image,
+                                    alt: 'Aurababy',
+                                    className: 'character-image'
+                                }),
+                                React.createElement('div', { className: 'character-name' }, 'Aurababy')
+                            ),
+                            React.createElement('div', {
+                                className: `character-option ${selectedCharacter === 'goonerbaby' ? 'selected' : ''}`,
+                                onClick: () => {
+                                    setSelectedCharacter('goonerbaby');
+                                    setShowModal(false);
+                                }
+                            },
+                                React.createElement('img', {
+                                    src: characters.goonerbaby.image,
+                                    alt: 'Goonerbaby',
+                                    className: 'character-image'
+                                }),
+                                React.createElement('div', { className: 'character-name' }, 'Goonerbaby')
+                            )
+                        ),
+                        React.createElement('button', {
+                            className: 'close-modal',
+                            onClick: () => setShowModal(false)
+                        }, 'Close')
+                    )
+                )
+            );
+        }
+
+        ReactDOM.render(React.createElement(MovementHub), document.getElementById('root'));
+    </script>
+</body>
+</html>
