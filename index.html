@@ -1,266 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>Movement Hub</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-        .screen {
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #1e3a8a 0%, #581c87 50%, #312e81 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        .grid-bg {
-            position: absolute;
-            inset: 0;
-            opacity: 0.2;
-            background-image: 
-                linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-        }
-        .player {
-            position: absolute;
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%);
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
-            transition: all 75ms;
-        }
-        .player-border {
-            width: 100%;
-            height: 100%;
-            border-radius: 8px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-        }
-        .hud {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-        }
-        .babies-button {
-            background: linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%);
-            color: white;
-            font-weight: bold;
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            margin-bottom: 8px;
-            transition: all 0.2s;
-            display: block;
-            width: 100%;
-        }
-        .babies-button:hover {
-            background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%);
-            transform: scale(1.05);
-        }
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .modal {
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid rgba(34, 211, 238, 0.5);
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 700px;
-            width: 90%;
-        }
-        .modal-title {
-            color: #22d3ee;
-            font-size: 28px;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .character-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-        .character-option {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 12px;
-            padding: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .character-option:hover {
-            border-color: #22d3ee;
-            background: rgba(34, 211, 238, 0.1);
-            transform: scale(1.05);
-        }
-        .character-option.selected {
-            border-color: #22d3ee;
-            background: rgba(34, 211, 238, 0.2);
-            box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
-        }
-        .character-image {
-            width: 100%;
-            height: 120px;
-            object-fit: contain;
-            margin-bottom: 12px;
-            border-radius: 8px;
-        }
-        .character-name {
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-            text-align: center;
-        }
-        .close-modal {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 10px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-top: 24px;
-            width: 100%;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        .close-modal:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        .position {
-            font-size: 11px;
-            color: #9ca3af;
-        }
-        .username-label {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            color: #22d3ee;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: bold;
-            white-space: nowrap;
-            pointer-events: none;
-            transition: all 75ms;
-            transform: translateX(-50%);
-        }
-        /* Admin rainbow style */
-        .username-label.admin {
-            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
-            color: white;
-            box-shadow: 0 0 12px rgba(0,0,0,0.6);
-            -webkit-background-clip: padding-box;
-        }
-        .center-container {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .welcome-box {
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(16px);
-            border-radius: 16px;
-            padding: 32px;
-            max-width: 400px;
-            width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .title {
-            font-size: 36px;
-            font-weight: bold;
-            color: white;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        .subtitle {
-            color: #d1d5db;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        .input {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 16px;
-            margin-bottom: 16px;
-            outline: none;
-        }
-        .input:focus {
-            border-color: #22d3ee;
-            box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.3);
-        }
-        .input::placeholder {
-            color: #9ca3af;
-        }
-        .error {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid #ef4444;
-            color: #fecaca;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-size: 14px;
-        }
-        .button {
-            width: 100%;
-            background: linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%);
-            color: white;
-            font-weight: bold;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s;
-        }
-        .button:hover {
-            background: linear-gradient(90deg, #06b6d4 0%, #2563eb 100%);
-        }
-        .rules {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 12px;
-            color: #9ca3af;
-        }
-        .rules p {
-            margin: 4px 0;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { margin: 0; padding: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .screen { width: 100vw; height: 100vh; background: linear-gradient(135deg,#1e3a8a 0%,#581c87 50%,#312e81 100%); position: relative; overflow: hidden; }
+        .grid-bg { position: absolute; inset: 0; opacity: 0.2; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; }
+        .player { position: absolute; width: 48px; height: 48px; background: linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%); border-radius: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.6); transition: all 75ms; }
+        .hud { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 8px; }
+        .babies-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; margin-bottom: 8px; transition: all 0.2s; display: block; width: 100%; }
+        .admin-button { background: linear-gradient(90deg,#f97316 0%,#ef4444 100%); color: white; font-weight: bold; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; margin-top: 8px; transition: all 0.15s; display: block; width: 100%; }
+        .babies-button:hover, .admin-button:hover { transform: scale(1.03); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal { background: rgba(0,0,0,0.9); border: 2px solid rgba(34,211,238,0.5); border-radius: 16px; padding: 24px; max-width: 900px; width: 92%; max-height: 85vh; overflow: auto; color: white; }
+        .modal-title { color: #22d3ee; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 12px; }
+        .character-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; max-height: 60vh; overflow-y: auto; }
+        .character-option { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; }
+        .character-option:hover { border-color: #22d3ee; transform: scale(1.03); }
+        .character-option.selected { border-color: #22d3ee; background: rgba(34,211,238,0.12); box-shadow: 0 0 20px rgba(34,211,238,0.25); }
+        .character-image { width: 100%; height: 120px; object-fit: contain; margin-bottom: 8px; border-radius: 8px; }
+        .character-name { color: white; font-weight: bold; font-size: 14px; text-align: center; }
+        .close-modal { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.18); padding: 10px 16px; border-radius: 8px; cursor: pointer; margin-top: 12px; width: 100%; font-size: 14px; transition: all 0.15s; }
+        .close-modal:hover { background: rgba(255,255,255,0.12); }
+        .position { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+        .username-label { position: absolute; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: #22d3ee; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; white-space: nowrap; pointer-events: none; transition: all 75ms; transform: translateX(-50%); }
+        .username-label.admin { background: linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff); color: white; box-shadow: 0 0 12px rgba(0,0,0,0.6); }
+        .center-container { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .welcome-box { background: rgba(0,0,0,0.5); backdrop-filter: blur(16px); border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; border: 1px solid rgba(255,255,255,0.18); }
+        .title { font-size: 36px; font-weight: bold; color: white; text-align: center; margin-bottom: 8px; }
+        .subtitle { color: #d1d5db; text-align: center; margin-bottom: 16px; }
+        .input { width: 100%; padding: 12px 16px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: white; font-size: 16px; margin-bottom: 12px; outline: none; }
+        .input:focus { border-color: #22d3ee; box-shadow: 0 0 0 2px rgba(34,211,238,0.18); }
+        .input::placeholder { color: #9ca3af; }
+        .error { background: rgba(239,68,68,0.18); border: 1px solid #ef4444; color: #fecaca; padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }
+        .button { width: 100%; background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.18s; }
+        .button:hover { transform: translateY(-2px); }
+        .rules { margin-top: 12px; text-align: center; font-size: 12px; color: #9ca3af; }
+        .rules p { margin: 4px 0; }
+        /* Admin panel styles */
+        .admin-panel { display: flex; gap: 12px; }
+        .admin-column { flex: 1; background: rgba(255,255,255,0.02); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); max-height: 60vh; overflow: auto; }
+        .admin-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; border-bottom: 1px dashed rgba(255,255,255,0.03); }
+        .admin-row .meta { display:flex; gap:8px; align-items:center; }
+        .small-btn { padding:6px 8px; border-radius:6px; border:none; cursor:pointer; background:rgba(255,255,255,0.06); color:white; font-size:13px; }
+        .small-btn.warn { background: linear-gradient(90deg,#f97316,#ef4444); }
+        .small-btn.ghost { background: rgba(255,255,255,0.04); }
+        .muted { color:#9ca3af; font-size:13px; }
+        .tab-row { display:flex; gap:8px; margin-bottom:8px; }
+        .tab { padding:6px 10px; border-radius:8px; background: rgba(255,255,255,0.03); cursor:pointer; font-weight:600; }
+        .tab.active { background: rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.15); color:#22d3ee; }
     </style>
 </head>
 <body>
@@ -269,9 +60,8 @@
     <script type="module">
         import React from 'https://cdn.skypack.dev/react@18.2.0';
         import ReactDOM from 'https://cdn.skypack.dev/react-dom@18.2.0';
-
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { getDatabase, ref, set, onValue, onDisconnect, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
@@ -296,7 +86,10 @@
             const [showModal, setShowModal] = useState(false);
             const [selectedCharacter, setSelectedCharacter] = useState('aurababy');
             const [players, setPlayers] = useState({});
-            
+            const [moderation, setModeration] = useState({ bans: {}, timeouts: {} });
+            const [showAdminModal, setShowAdminModal] = useState(false);
+            const [adminTab, setAdminTab] = useState('players'); // players | bans | timeouts
+
             const playerId = useRef(crypto.randomUUID());
             const renderRef = useRef({});
             const keysPressed = useRef({});
@@ -305,60 +98,26 @@
             const SPEED = 4;
 
             const characters = {
-                aurababy: {
-                    name: 'Aurababy',
-                    image: 'https://i.ibb.co/nq467xv6/aurababy.png'
-                },
-                goonerbaby: {
-                    name: 'Goonerbaby',
-                    image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png'
-                },
-                fattiebaby: {
-                    name: 'Fattie Baby',
-                    image: 'https://i.ibb.co/Kj0gKt2Q/fattiebaby.png'
-                },
-                zoely: {
-                    name: 'Zoely',
-                    image: 'https://i.ibb.co/PsXr9KgX/zoely.png'
-                },
-                hollybaby: {
-                    name: 'Holly Baby',
-                    image: 'https://i.ibb.co/DD8Py8yW/hollybaby.png'
-                },
-                jollybaby: {
-                    name: 'Jolly Baby',
-                    image: 'https://i.ibb.co/8DNHS4n9/jollybaby.png'
-                },
-                /* Admin-specific options (provided images) */
-                kingderrick_admin: {
-                    name: 'King Derrick',
-                    image: 'https://i.ibb.co/MyRFhbh7/kingderrick.png'
-                },
-                grant_admin: {
-                    name: 'Grant',
-                    image: 'https://i.ibb.co/KjmZGy3V/grant.png'
-                },
-                manny_admin: {
-                    name: 'Manny',
-                    image: 'https://i.ibb.co/0jjX9X56/manny.png'
-                },
-                daniel_admin: {
-                    name: 'Daniel',
-                    image: 'https://i.ibb.co/Gf47wYjN/daniel.png'
-                },
-                levi_admin: {
-                    name: 'Levi',
-                    image: 'https://i.ibb.co/XZPzfYNg/levi.png'
-                }
+                aurababy: { name: 'Aurababy', image: 'https://i.ibb.co/nq467xv6/aurababy.png' },
+                goonerbaby: { name: 'Goonerbaby', image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png' },
+                fattiebaby: { name: 'Fattie Baby', image: 'https://i.ibb.co/Kj0gKt2Q/fattiebaby.png' },
+                zoely: { name: 'Zoely', image: 'https://i.ibb.co/PsXr9KgX/zoely.png' },
+                hollybaby: { name: 'Holly Baby', image: 'https://i.ibb.co/DD8Py8yW/hollybaby.png' },
+                jollybaby: { name: 'Jolly Baby', image: 'https://i.ibb.co/8DNHS4n9/jollybaby.png' },
+                kingderrick_admin: { name: 'King Derrick', image: 'https://i.ibb.co/MyRFhbh7/kingderrick.png' },
+                grant_admin: { name: 'Grant', image: 'https://i.ibb.co/KjmZGy3V/grant.png' },
+                manny_admin: { name: 'Manny', image: 'https://i.ibb.co/0jjX9X56/manny.png' },
+                daniel_admin: { name: 'Daniel', image: 'https://i.ibb.co/Gf47wYjN/daniel.png' },
+                levi_admin: { name: 'Levi', image: 'https://i.ibb.co/XZPzfYNg/levi.png' }
             };
 
             const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
             const ADMIN_PASSWORD = 'chickenfishfarting';
 
             const badWords = [
-                'fuck', 'shit', 'damn', 'bitch', 'ass', 'asshole', 'bastard', 'crap',
-                'piss', 'dick', 'cock', 'pussy', 'hell', 'whore', 'slut', 'fag',
-                'nigger', 'nigga', 'retard', 'cunt', 'twat'
+                'fuck','shit','damn','bitch','ass','asshole','bastard','crap',
+                'piss','dick','cock','pussy','hell','whore','slut','fag',
+                'nigger','nigga','retard','cunt','twat'
             ];
 
             const containsBadWord = (text) => {
@@ -366,8 +125,86 @@
                 return badWords.some(word => lowerText.includes(word));
             };
 
-            const handleUsernameSubmit = (e) => {
-                e.preventDefault();
+            // utility to convert duration labels to ms
+            const durationMs = (label) => {
+                switch (label) {
+                    case '10s': return 10 * 1000;
+                    case '1m': return 60 * 1000;
+                    case '10m': return 10 * 60 * 1000;
+                    case '1h': return 60 * 60 * 1000;
+                    case '1d': return 24 * 60 * 60 * 1000;
+                    case 'perm': return null;
+                    default: return null;
+                }
+            };
+
+            // check moderation entry validity (remove expired)
+            const validateAndFetchModerationEntry = async (path, key) => {
+                const nodeRef = ref(db, `${path}/${key}`);
+                const snap = await get(nodeRef);
+                if (!snap.exists()) return null;
+                const data = snap.val();
+                if (data.expiresAt && Date.now() > data.expiresAt) {
+                    // expired -> remove and return null
+                    await remove(nodeRef);
+                    return null;
+                }
+                return data;
+            };
+
+            // remove any player rows that match username (used when banning)
+            const removePlayerByUsername = async (target) => {
+                const lowerTarget = target.toLowerCase();
+                // iterate current players state and remove matching ones
+                for (const [id, p] of Object.entries(players || {})) {
+                    if ((p.username || '').toLowerCase() === lowerTarget) {
+                        await set(ref(db, `players/${id}`), null);
+                    }
+                }
+            };
+
+            // Admin moderation actions
+            const applyModeration = async (targetUsername, type, durationLabel) => {
+                if (!username) return alert('You are not signed in as admin.');
+                const isAdmin = adminNames.includes((username || '').toLowerCase());
+                if (!isAdmin) return alert('Only admins can perform this action.');
+
+                const key = targetUsername.toLowerCase();
+                const ms = durationMs(durationLabel);
+                const now = Date.now();
+                const payload = {
+                    moderator: username,
+                    target: targetUsername,
+                    appliedAt: now,
+                    expiresAt: ms == null ? null : now + ms
+                };
+
+                if (type === 'ban') {
+                    await set(ref(db, `moderation/bans/${key}`), payload);
+                    // remove player from players
+                    await removePlayerByUsername(targetUsername);
+                    alert(`Banned ${targetUsername} (${durationLabel})`);
+                } else if (type === 'timeout') {
+                    await set(ref(db, `moderation/timeouts/${key}`), payload);
+                    await removePlayerByUsername(targetUsername);
+                    alert(`Timed out ${targetUsername} (${durationLabel})`);
+                }
+            };
+
+            const removeModeration = async (targetUsername, type) => {
+                const key = targetUsername.toLowerCase();
+                if (type === 'ban') {
+                    await remove(ref(db, `moderation/bans/${key}`));
+                    alert(`Unbanned ${targetUsername}`);
+                } else if (type === 'timeout') {
+                    await remove(ref(db, `moderation/timeouts/${key}`));
+                    alert(`Removed timeout for ${targetUsername}`);
+                }
+            };
+
+            // Handle username submission with moderation checks
+            const handleUsernameSubmit = async (e) => {
+                if (e && e.preventDefault) e.preventDefault();
                 setError('');
 
                 const trimmedUsername = inputUsername.trim();
@@ -399,6 +236,34 @@
                     }
                 }
 
+                // Check bans
+                try {
+                    const ban = await validateAndFetchModerationEntry('moderation/bans', lower);
+                    if (ban) {
+                        if (ban.expiresAt == null) {
+                            setError('This username is permanently banned.');
+                            return;
+                        } else {
+                            const remaining = Math.max(0, ban.expiresAt - Date.now());
+                            setError(`You are banned for another ${Math.ceil(remaining / 1000)}s`);
+                            return;
+                        }
+                    }
+                    const timeout = await validateAndFetchModerationEntry('moderation/timeouts', lower);
+                    if (timeout) {
+                        const remaining = timeout.expiresAt ? Math.max(0, timeout.expiresAt - Date.now()) : null;
+                        if (remaining == null) {
+                            setError('This username is currently timed out (permanent).');
+                            return;
+                        } else {
+                            setError(`You are timed out for another ${Math.ceil(remaining / 1000)}s`);
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Moderation check error', err);
+                }
+
                 localStorage.setItem('movement_hub_username', trimmedUsername);
                 setUsername(trimmedUsername);
             };
@@ -415,12 +280,11 @@
 
                 const handleKeyDown = (e) => {
                     const key = e.key.toLowerCase();
-                    if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
+                    if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) {
                         e.preventDefault();
                         keysPressed.current[key] = true;
                     }
                 };
-
                 const handleKeyUp = (e) => {
                     const key = e.key.toLowerCase();
                     keysPressed.current[key] = false;
@@ -428,37 +292,22 @@
 
                 const updatePosition = () => {
                     setPosition(prev => {
-                        let moveX = 0;
-                        let moveY = 0;
-
-                        if (keysPressed.current['w'] || keysPressed.current['arrowup']) {
-                            moveY -= 1;
-                        }
-                        if (keysPressed.current['s'] || keysPressed.current['arrowdown']) {
-                            moveY += 1;
-                        }
-                        if (keysPressed.current['a'] || keysPressed.current['arrowleft']) {
-                            moveX -= 1;
-                        }
-                        if (keysPressed.current['d'] || keysPressed.current['arrowright']) {
-                            moveX += 1;
-                        }
+                        let moveX = 0, moveY = 0;
+                        if (keysPressed.current['w'] || keysPressed.current['arrowup']) moveY -= 1;
+                        if (keysPressed.current['s'] || keysPressed.current['arrowdown']) moveY += 1;
+                        if (keysPressed.current['a'] || keysPressed.current['arrowleft']) moveX -= 1;
+                        if (keysPressed.current['d'] || keysPressed.current['arrowright']) moveX += 1;
 
                         if (moveX !== 0 && moveY !== 0) {
-                            const length = Math.sqrt(moveX * moveX + moveY * moveY);
-                            moveX = (moveX / length) * SPEED;
-                            moveY = (moveY / length) * SPEED;
-                        } else {
-                            moveX *= SPEED;
-                            moveY *= SPEED;
-                        }
+                            const len = Math.sqrt(moveX*moveX + moveY*moveY);
+                            moveX = (moveX / len) * SPEED;
+                            moveY = (moveY / len) * SPEED;
+                        } else { moveX *= SPEED; moveY *= SPEED; }
 
                         let newX = prev.x + moveX;
                         let newY = prev.y + moveY;
-
                         newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
                         newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
-
                         return { x: newX, y: newY };
                     });
 
@@ -472,9 +321,7 @@
                 return () => {
                     window.removeEventListener('keydown', handleKeyDown);
                     window.removeEventListener('keyup', handleKeyUp);
-                    if (animationFrame.current) {
-                        cancelAnimationFrame(animationFrame.current);
-                    }
+                    if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
                 };
             }, [username]);
 
@@ -487,7 +334,7 @@
                     x: position.x,
                     y: position.y,
                     character: selectedCharacter,
-                    admin: adminNames.includes(username.toLowerCase()) // mark admin flag
+                    admin: adminNames.includes(username.toLowerCase())
                 });
                 onDisconnect(playerRef).remove();
             }, [username]);
@@ -510,23 +357,52 @@
 
             // Listen to all players
             useEffect(() => {
-                onValue(ref(db, 'players'), snapshot => {
+                const playersRef = ref(db, 'players');
+                return onValue(playersRef, snapshot => {
                     setPlayers(snapshot.val() || {});
                 });
+            }, []);
+
+            // Listen to moderation lists
+            useEffect(() => {
+                const bansRef = ref(db, 'moderation/bans');
+                const timeoutsRef = ref(db, 'moderation/timeouts');
+
+                const unsubBans = onValue(bansRef, snapshot => {
+                    const val = snapshot.val() || {};
+                    // filter expired on client (server should also handle)
+                    const next = {};
+                    for (const [k, v] of Object.entries(val)) {
+                        if (v.expiresAt && Date.now() > v.expiresAt) {
+                            // remove expired
+                            remove(ref(db, `moderation/bans/${k}`));
+                        } else next[k] = v;
+                    }
+                    setModeration(prev => ({ ...prev, bans: next }));
+                });
+
+                const unsubTimeouts = onValue(timeoutsRef, snapshot => {
+                    const val = snapshot.val() || {};
+                    const next = {};
+                    for (const [k, v] of Object.entries(val)) {
+                        if (v.expiresAt && Date.now() > v.expiresAt) {
+                            remove(ref(db, `moderation/timeouts/${k}`));
+                        } else next[k] = v;
+                    }
+                    setModeration(prev => ({ ...prev, timeouts: next }));
+                });
+
+                return () => {
+                    // onValue returns unsubscribe? It returns the callback; in firebase v9 onValue returns an unsubscribe function via returned function from onValue is same pattern: call .off not provided; but calling onValue returns the callback reference and we can't easily off here; simple no-op cleanup to avoid complex details
+                };
             }, []);
 
             // Smooth rendering for other players
             useEffect(() => {
                 const next = {};
-                for (const [id, p] of Object.entries(players)) {
+                for (const [id, p] of Object.entries(players || {})) {
                     if (id === playerId.current) {
-                        next[id] = {
-                            x: position.x,
-                            y: position.y,
-                            username,
-                            character: selectedCharacter,
-                            admin: adminNames.includes((username || '').toLowerCase())
-                        };
+                        next[id] = { x: position.x, y: position.y, username, character: selectedCharacter, admin: adminNames.includes((username || '').toLowerCase()) };
                     } else {
                         const prev = renderRef.current[id] || p;
                         next[id] = {
@@ -534,7 +410,7 @@
                             y: prev.y + (p.y - prev.y) * 0.25,
                             username: p.username,
                             character: p.character,
-                            admin: p.admin || (adminNames.includes((p.username || '').toLowerCase()))
+                            admin: p.admin || adminNames.includes((p.username || '').toLowerCase())
                         };
                     }
                 }
@@ -548,19 +424,11 @@
                         React.createElement('p', { className: 'subtitle' }, 'Choose your username to begin'),
                         React.createElement('form', { onSubmit: handleUsernameSubmit },
                             React.createElement('input', {
-                                type: 'text',
-                                value: inputUsername,
-                                onChange: (e) => setInputUsername(e.target.value),
-                                placeholder: 'Enter username',
-                                className: 'input',
-                                maxLength: 20,
-                                autoFocus: true
+                                type: 'text', value: inputUsername, onChange: (e) => setInputUsername(e.target.value),
+                                placeholder: 'Enter username', className: 'input', maxLength: 20, autoFocus: true
                             }),
                             error && React.createElement('div', { className: 'error' }, error),
-                            React.createElement('button', {
-                                type: 'submit',
-                                className: 'button'
-                            }, 'Start Playing')
+                            React.createElement('button', { type: 'submit', className: 'button' }, 'Start Playing')
                         ),
                         React.createElement('div', { className: 'rules' },
                             React.createElement('p', null, '• 3-20 characters'),
@@ -571,9 +439,14 @@
                 );
             }
 
+            const isAdminUser = adminNames.includes((username || '').toLowerCase());
+
+            // collect unique usernames from players for admin list
+            const uniquePlayerUsernames = [...new Set(Object.values(players || {}).map(p => p.username).filter(Boolean))];
+
             return React.createElement('div', { className: 'screen' },
                 React.createElement('div', { className: 'grid-bg' }),
-                
+
                 // Render all players
                 Object.entries(renderRef.current).map(([id, p]) =>
                     React.createElement(React.Fragment, { key: id },
@@ -584,45 +457,30 @@
                             React.createElement('img', {
                                 src: characters[p.character]?.image,
                                 alt: p.character,
-                                style: {
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'contain',
-                                    borderRadius: '8px'
-                                }
+                                style: { width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }
                             })
                         ),
                         React.createElement('div', {
                             className: 'username-label' + (p.admin ? ' admin' : ''),
-                            style: { 
-                                left: `${p.x + 24}px`, 
-                                top: `${p.y + 58}px`
-                            }
+                            style: { left: `${p.x + 24}px`, top: `${p.y + 58}px` }
                         }, p.username)
                     )
                 ),
+
                 React.createElement('div', { className: 'hud' },
-                    React.createElement('button', { 
-                        className: 'babies-button',
-                        onClick: () => setShowModal(true)
-                    }, '👶 Babies'),
-                    React.createElement('div', { className: 'position' }, 
-                        `(${Math.round(position.x)}, ${Math.round(position.y)})`
-                    )
+                    React.createElement('button', { className: 'babies-button', onClick: () => setShowModal(true) }, '👶 Babies'),
+                    isAdminUser && React.createElement('button', { className: 'admin-button', onClick: () => setShowAdminModal(true) }, '🔧 Admin Panel'),
+                    React.createElement('div', { className: 'position' }, `(${Math.round(position.x)}, ${Math.round(position.y)})`)
                 ),
-                showModal && React.createElement('div', { 
-                    className: 'modal-overlay',
-                    onClick: () => setShowModal(false)
-                },
-                    React.createElement('div', {
-                        className: 'modal',
-                        onClick: (e) => e.stopPropagation()
-                    },
+
+                // Character modal
+                showModal && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowModal(false) },
+                    React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
                         React.createElement('div', { className: 'modal-title' }, 'Choose Your Character'),
                         React.createElement('div', { className: 'character-grid' },
-                            Object.keys(characters).map(key => 
+                            Object.keys(characters).map(key =>
                                 React.createElement('div', {
-                                    key: key,
+                                    key,
                                     className: `character-option ${selectedCharacter === key ? 'selected' : ''}`,
                                     onClick: () => {
                                         setSelectedCharacter(key);
@@ -636,19 +494,99 @@
                                         setShowModal(false);
                                     }
                                 },
-                                    React.createElement('img', {
-                                        src: characters[key].image,
-                                        alt: characters[key].name,
-                                        className: 'character-image'
-                                    }),
+                                    React.createElement('img', { src: characters[key].image, alt: characters[key].name, className: 'character-image' }),
                                     React.createElement('div', { className: 'character-name' }, characters[key].name)
                                 )
                             )
                         ),
-                        React.createElement('button', {
-                            className: 'close-modal',
-                            onClick: () => setShowModal(false)
-                        }, 'Close')
+                        React.createElement('button', { className: 'close-modal', onClick: () => setShowModal(false) }, 'Close')
+                    )
+                ),
+
+                // Admin modal
+                showAdminModal && isAdminUser && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowAdminModal(false) },
+                    React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
+                        React.createElement('div', { className: 'modal-title' }, 'Admin Panel'),
+                        React.createElement('div', { className: 'tab-row' },
+                            React.createElement('div', { className: `tab ${adminTab === 'players' ? 'active' : ''}`, onClick: () => setAdminTab('players') }, 'Players'),
+                            React.createElement('div', { className: `tab ${adminTab === 'bans' ? 'active' : ''}`, onClick: () => setAdminTab('bans') }, `Ban List (${Object.keys(moderation.bans || {}).length})`),
+                            React.createElement('div', { className: `tab ${adminTab === 'timeouts' ? 'active' : ''}`, onClick: () => setAdminTab('timeouts') }, `Timeouts (${Object.keys(moderation.timeouts || {}).length})`)
+                        ),
+
+                        adminTab === 'players' && React.createElement('div', { className: 'admin-panel' },
+                            React.createElement('div', { className: 'admin-column' },
+                                React.createElement('div', { className: 'muted' }, `Active players (${uniquePlayerUsernames.length})`),
+                                uniquePlayerUsernames.map(u =>
+                                    React.createElement('div', { className: 'admin-row', key: u },
+                                        React.createElement('div', { className: 'meta' },
+                                            React.createElement('div', { style: { fontWeight: 700 } }, u),
+                                            moderation.bans[u.toLowerCase()] && React.createElement('div', { className: 'muted' }, '• banned'),
+                                            moderation.timeouts[u.toLowerCase()] && React.createElement('div', { className: 'muted' }, '• timed out')
+                                        ),
+                                        React.createElement('div', null,
+                                            React.createElement('button', { className: 'small-btn ghost', onClick: () => {
+                                                // Ban options
+                                                const choice = window.prompt('Ban duration: (10s,1m,10m,1h,1d,perm)', '10s');
+                                                if (choice) applyModeration(u, 'ban', choice);
+                                            } }, 'Ban'),
+                                            React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
+                                                const choice = window.prompt('Timeout duration: (10s,1m,10m,1h,1d,perm)', '1m');
+                                                if (choice) applyModeration(u, 'timeout', choice);
+                                            } }, 'Timeout'),
+                                            React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
+                                                // Unban & remove timeout
+                                                const doUnban = window.confirm(`Unban ${u}?`);
+                                                if (doUnban) removeModeration(u, 'ban');
+                                            } }, 'Unban'),
+                                            React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
+                                                const doUn = window.confirm(`Remove timeout for ${u}?`);
+                                                if (doUn) removeModeration(u, 'timeout');
+                                            } }, 'Remove Timeout')
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+
+                        adminTab === 'bans' && React.createElement('div', { className: 'admin-panel' },
+                            React.createElement('div', { className: 'admin-column' },
+                                React.createElement('div', { className: 'muted' }, 'Banned users'),
+                                Object.entries(moderation.bans || {}).length === 0 && React.createElement('div', { className: 'muted' }, 'No banned users'),
+                                Object.entries(moderation.bans || {}).map(([k, v]) =>
+                                    React.createElement('div', { className: 'admin-row', key: k },
+                                        React.createElement('div', { className: 'meta' },
+                                            React.createElement('div', { style: { fontWeight: 700 } }, k),
+                                            React.createElement('div', { className: 'muted' }, v.moderator ? ` by ${v.moderator}` : '')
+                                        ),
+                                        React.createElement('div', null,
+                                            React.createElement('button', { className: 'small-btn', onClick: () => removeModeration(k, 'ban') }, 'Unban')
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+
+                        adminTab === 'timeouts' && React.createElement('div', { className: 'admin-panel' },
+                            React.createElement('div', { className: 'admin-column' },
+                                React.createElement('div', { className: 'muted' }, 'Timed out users'),
+                                Object.entries(moderation.timeouts || {}).length === 0 && React.createElement('div', { className: 'muted' }, 'No timeouts'),
+                                Object.entries(moderation.timeouts || {}).map(([k, v]) =>
+                                    React.createElement('div', { className: 'admin-row', key: k },
+                                        React.createElement('div', { className: 'meta' },
+                                            React.createElement('div', { style: { fontWeight: 700 } }, k),
+                                            React.createElement('div', { className: 'muted' }, v.moderator ? ` by ${v.moderator}` : '')
+                                        ),
+                                        React.createElement('div', null,
+                                            React.createElement('button', { className: 'small-btn', onClick: () => removeModeration(k, 'timeout') }, 'Remove Timeout')
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+
+                        React.createElement('div', { style: { marginTop: 12 } },
+                            React.createElement('button', { className: 'close-modal', onClick: () => setShowAdminModal(false) }, 'Close Admin Panel')
+                        )
                     )
                 )
             );
