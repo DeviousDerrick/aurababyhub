@@ -21,7 +21,7 @@
         .character-option { background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.12); border-radius: 12px; padding: 12px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; }
         .character-option:hover { border-color: #22d3ee; transform: scale(1.03); }
         .character-option.selected { border-color: #22d3ee; background: rgba(34,211,238,0.12); box-shadow: 0 0 20px rgba(34,211,238,0.25); }
-        .character-image { width: 100%; height: 120px; object-fit: contain; margin-bottom: 8px; border-radius: 8px; }
+        .character-image { width: 100%; height: 120px; object-fit: contain; margin-bottom: 8px; border-radius: 8px; background: rgba(255,255,255,0.03); }
         .character-name { color: white; font-weight: bold; font-size: 14px; text-align: center; }
         .close-modal { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.18); padding: 10px 16px; border-radius: 8px; cursor: pointer; margin-top: 12px; width: 100%; font-size: 14px; transition: all 0.15s; }
         .close-modal:hover { background: rgba(255,255,255,0.12); }
@@ -53,7 +53,7 @@
         .tab { padding:6px 10px; border-radius:8px; background: rgba(255,255,255,0.03); cursor:pointer; font-weight:600; }
         .tab.active { background: rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.15); color:#22d3ee; }
 
-        /* Moderation overlay */
+        /* Moderation overlay (local) */
         .mod-overlay {
             position: fixed;
             inset: 0;
@@ -84,6 +84,7 @@
             border-radius: 12px;
             box-shadow: 0 6px 30px rgba(0,0,0,0.6);
             animation: flashScale 1000ms infinite;
+            background: rgba(255,255,255,0.02);
         }
         @keyframes flashScale {
             0% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
@@ -93,6 +94,33 @@
             100% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
         }
         .mod-perm { color: #ff7b7b; font-weight: 700; margin-bottom: 10px; }
+
+        /* Top-center announcement */
+        .top-announcement {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2100;
+            background: linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4));
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+            max-width: 80%;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+            animation: slideIn 300ms ease;
+            font-size: 16px; /* medium size */
+        }
+        .announce-ban { color: #ff9b9b; }
+        .announce-timeout { color: #ffd58a; }
+        @keyframes slideIn {
+            from { transform: translateX(-50%) translateY(-6px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -131,6 +159,10 @@
             const [showAdminModal, setShowAdminModal] = useState(false);
             const [adminTab, setAdminTab] = useState('players'); // players | bans | timeouts
 
+            // announcement (top-center) { text, type } shown for 7s
+            const [announcement, setAnnouncement] = useState(null);
+            const announceTimeoutRef = useRef(null);
+
             // moderation state for current user (null or {type, moderator, appliedAt, expiresAt})
             const [selfModeration, setSelfModeration] = useState(null);
             const [countdown, setCountdown] = useState(null);
@@ -149,15 +181,22 @@
                 zoely: { name: 'Zoely', image: 'https://i.ibb.co/PsXr9KgX/zoely.png' },
                 hollybaby: { name: 'Holly Baby', image: 'https://i.ibb.co/DD8Py8yW/hollybaby.png' },
                 jollybaby: { name: 'Jolly Baby', image: 'https://i.ibb.co/8DNHS4n9/jollybaby.png' },
+
+                // admin-specific options
                 kingderrick_admin: { name: 'King Derrick', image: 'https://i.ibb.co/MyRFhbh7/kingderrick.png' },
                 grant_admin: { name: 'Grant', image: 'https://i.ibb.co/KjmZGy3V/grant.png' },
                 manny_admin: { name: 'Manny', image: 'https://i.ibb.co/0jjX9X56/manny.png' },
                 daniel_admin: { name: 'Daniel', image: 'https://i.ibb.co/Gf47wYjN/daniel.png' },
-                levi_admin: { name: 'Levi', image: 'https://i.ibb.co/XZPzfYNg/levi.png' }
+                levi_admin: { name: 'Levi', image: 'https://i.ibb.co/XZPzfYNg/levi.png' },
+
+                // new babies requested (using the ibb.co page links you provided)
+                // note: these are ibb.co page links — if you'd prefer direct image i.ibb.co URLs replace them
+                judgmentbaby: { name: 'Judgment Baby', image: 'https://ibb.co/b5MrNmRL' },
+                baby_that_holds_aura: { name: 'The Baby That Holds Aura', image: 'https://ibb.co/jmTHJfh' },
+                gangsta_baby: { name: 'Gangsta Baby', image: 'https://ibb.co/VYM6ZJFD' }
             };
 
-            // Image to flash when the local user is moderated
-            // (you provided https://ibb.co/b5MrNmRL; use it here — if you'd like a direct i.ibb.co link instead, replace it)
+            // Image to flash when the local user is moderated (use Judgment Baby page link by default)
             const MOD_FLASH_IMAGE = 'https://ibb.co/b5MrNmRL';
 
             const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
@@ -185,6 +224,18 @@
                     case 'perm': return null;
                     default: return null;
                 }
+            };
+
+            // show top-center announcement for 7s
+            const showAnnouncement = (text, type = 'info') => {
+                setAnnouncement({ text, type });
+                if (announceTimeoutRef.current) {
+                    clearTimeout(announceTimeoutRef.current);
+                }
+                announceTimeoutRef.current = setTimeout(() => {
+                    setAnnouncement(null);
+                    announceTimeoutRef.current = null;
+                }, 7000);
             };
 
             // check moderation entry validity (remove expired)
@@ -230,11 +281,11 @@
                 if (type === 'ban') {
                     await set(ref(db, `moderation/bans/${key}`), payload);
                     await removePlayerByUsername(targetUsername);
-                    alert(`Banned ${targetUsername} (${durationLabel})`);
+                    showAnnouncement(`${targetUsername} was BANNED by ${username}`, 'ban');
                 } else if (type === 'timeout') {
                     await set(ref(db, `moderation/timeouts/${key}`), payload);
                     await removePlayerByUsername(targetUsername);
-                    alert(`Timed out ${targetUsername} (${durationLabel})`);
+                    showAnnouncement(`${targetUsername} was TIMED OUT by ${username}`, 'timeout');
                 }
             };
 
@@ -242,10 +293,10 @@
                 const key = targetUsername.toLowerCase();
                 if (type === 'ban') {
                     await remove(ref(db, `moderation/bans/${key}`));
-                    alert(`Unbanned ${targetUsername}`);
+                    showAnnouncement(`${targetUsername} was UNBANNED by ${username}`, 'info');
                 } else if (type === 'timeout') {
                     await remove(ref(db, `moderation/timeouts/${key}`));
-                    alert(`Removed timeout for ${targetUsername}`);
+                    showAnnouncement(`${targetUsername} timeout was REMOVED by ${username}`, 'info');
                 }
             };
 
@@ -327,7 +378,7 @@
                 const bansRef = ref(db, 'moderation/bans');
                 const timeoutsRef = ref(db, 'moderation/timeouts');
 
-                const unsubBans = onValue(bansRef, snapshot => {
+                onValue(bansRef, snapshot => {
                     const val = snapshot.val() || {};
                     const next = {};
                     for (const [k, v] of Object.entries(val)) {
@@ -338,7 +389,7 @@
                     setModeration(prev => ({ ...prev, bans: next }));
                 });
 
-                const unsubTimeouts = onValue(timeoutsRef, snapshot => {
+                onValue(timeoutsRef, snapshot => {
                     const val = snapshot.val() || {};
                     const next = {};
                     for (const [k, v] of Object.entries(val)) {
@@ -349,19 +400,17 @@
                     setModeration(prev => ({ ...prev, timeouts: next }));
                 });
 
-                // No explicit off here; keep listeners while app active.
-                return () => {};
+                // listeners live while app runs
             }, []);
 
+            // Listen for moderation entries that apply specifically to the current user
             useEffect(() => {
                 if (!username) return;
-
                 const lower = username.toLowerCase();
-                // Listen to moderation entries directly for the current user
                 const banRef = ref(db, `moderation/bans/${lower}`);
                 const timeoutRef = ref(db, `moderation/timeouts/${lower}`);
 
-                const unsubBan = onValue(banRef, snapshot => {
+                onValue(banRef, snapshot => {
                     const val = snapshot.val();
                     if (val) {
                         // enforce: remove player's DB entry so they're kicked
@@ -372,20 +421,17 @@
                     }
                 });
 
-                const unsubTimeout = onValue(timeoutRef, snapshot => {
+                onValue(timeoutRef, snapshot => {
                     const val = snapshot.val();
                     if (val) {
                         set(ref(db, `players/${playerId.current}`), null);
-                        // If both exist, ban overrides; we set whichever arrives last but ensure not to clear ban on timeout removal.
+                        // ban should override timeout if present; keep ban if exists
                         setSelfModeration(prev => (prev && prev.type === 'ban' ? prev : { type: 'timeout', ...val }));
                     } else {
                         setSelfModeration(prev => (prev && prev.type === 'timeout' ? null : prev));
                     }
                 });
 
-                return () => {
-                    // Keep listeners for lifetime of username; no explicit unsubscribe due to firebase v9 onValue pattern in browser environment here
-                };
             }, [username]);
 
             useEffect(() => {
@@ -403,7 +449,6 @@
                     const remain = Math.max(0, selfModeration.expiresAt - Date.now());
                     setCountdown(remain);
                     if (remain <= 0) {
-                        // moderation expired; clear state
                         setSelfModeration(null);
                         setCountdown(null);
                     }
@@ -479,7 +524,6 @@
                 if (!username) return;
                 // If moderated, don't write presence
                 if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
-                    // ensure not present in players
                     set(ref(db, `players/${playerId.current}`), null);
                     return;
                 }
@@ -499,7 +543,6 @@
                 if (!username) return;
                 const playerRef = ref(db, `players/${playerId.current}`);
                 const interval = setInterval(() => {
-                    // if moderated, clear presence
                     if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
                         set(playerRef, null);
                         return;
@@ -568,7 +611,7 @@
             const isAdminUser = adminNames.includes((username || '').toLowerCase());
             const uniquePlayerUsernames = [...new Set(Object.values(players || {}).map(p => p.username).filter(Boolean))];
 
-            // Helper to format countdown ms into mm:ss or <s>s
+            // Helper to format countdown ms into readable string
             const formatRemaining = (ms) => {
                 if (ms == null) return 'Permanent';
                 if (ms <= 1000) return '0s';
@@ -587,6 +630,11 @@
             return React.createElement('div', { className: 'screen' },
                 React.createElement('div', { className: 'grid-bg' }),
 
+                // Top-center announcement
+                announcement && React.createElement('div', {
+                    className: `top-announcement ${announcement.type === 'ban' ? 'announce-ban' : announcement.type === 'timeout' ? 'announce-timeout' : ''}`
+                }, announcement.text),
+
                 // Render all players
                 Object.entries(renderRef.current).map(([id, p]) =>
                     React.createElement(React.Fragment, { key: id },
@@ -595,7 +643,7 @@
                             style: { left: `${p.x}px`, top: `${p.y}px` }
                         },
                             React.createElement('img', {
-                                src: characters[p.character]?.image,
+                                src: characters[p.character]?.image || characters['aurababy'].image,
                                 alt: p.character,
                                 style: { width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }
                             })
