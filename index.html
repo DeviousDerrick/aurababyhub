@@ -52,6 +52,47 @@
         .tab-row { display:flex; gap:8px; margin-bottom:8px; }
         .tab { padding:6px 10px; border-radius:8px; background: rgba(255,255,255,0.03); cursor:pointer; font-weight:600; }
         .tab.active { background: rgba(34,211,238,0.12); border:1px solid rgba(34,211,238,0.15); color:#22d3ee; }
+
+        /* Moderation overlay */
+        .mod-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.85);
+            color: white;
+            flex-direction: column;
+        }
+        .mod-card {
+            text-align: center;
+            padding: 24px;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.08);
+            min-width: 320px;
+        }
+        .mod-title { font-size: 28px; font-weight: 800; color: #ff6b6b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .mod-desc { color: #e5e7eb; margin-bottom: 12px; }
+        .mod-countdown { font-size: 20px; font-weight: 700; color: #ffd166; margin-bottom: 12px; }
+        .flash-img {
+            width: 220px;
+            height: 220px;
+            object-fit: contain;
+            margin: 10px auto;
+            border-radius: 12px;
+            box-shadow: 0 6px 30px rgba(0,0,0,0.6);
+            animation: flashScale 1000ms infinite;
+        }
+        @keyframes flashScale {
+            0% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
+            25% { transform: scale(1.06); opacity: 1; filter: hue-rotate(40deg); }
+            50% { transform: scale(1); opacity: 0.4; filter: hue-rotate(80deg); }
+            75% { transform: scale(1.04); opacity: 1; filter: hue-rotate(120deg); }
+            100% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
+        }
+        .mod-perm { color: #ff7b7b; font-weight: 700; margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -90,6 +131,10 @@
             const [showAdminModal, setShowAdminModal] = useState(false);
             const [adminTab, setAdminTab] = useState('players'); // players | bans | timeouts
 
+            // moderation state for current user (null or {type, moderator, appliedAt, expiresAt})
+            const [selfModeration, setSelfModeration] = useState(null);
+            const [countdown, setCountdown] = useState(null);
+
             const playerId = useRef(crypto.randomUUID());
             const renderRef = useRef({});
             const keysPressed = useRef({});
@@ -110,6 +155,10 @@
                 daniel_admin: { name: 'Daniel', image: 'https://i.ibb.co/Gf47wYjN/daniel.png' },
                 levi_admin: { name: 'Levi', image: 'https://i.ibb.co/XZPzfYNg/levi.png' }
             };
+
+            // Image to flash when the local user is moderated
+            // (you provided https://ibb.co/b5MrNmRL; use it here — if you'd like a direct i.ibb.co link instead, replace it)
+            const MOD_FLASH_IMAGE = 'https://ibb.co/b5MrNmRL';
 
             const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
             const ADMIN_PASSWORD = 'chickenfishfarting';
@@ -155,7 +204,6 @@
             // remove any player rows that match username (used when banning)
             const removePlayerByUsername = async (target) => {
                 const lowerTarget = target.toLowerCase();
-                // iterate current players state and remove matching ones
                 for (const [id, p] of Object.entries(players || {})) {
                     if ((p.username || '').toLowerCase() === lowerTarget) {
                         await set(ref(db, `players/${id}`), null);
@@ -181,7 +229,6 @@
 
                 if (type === 'ban') {
                     await set(ref(db, `moderation/bans/${key}`), payload);
-                    // remove player from players
                     await removePlayerByUsername(targetUsername);
                     alert(`Banned ${targetUsername} (${durationLabel})`);
                 } else if (type === 'timeout') {
@@ -236,7 +283,7 @@
                     }
                 }
 
-                // Check bans
+                // Check bans/timeouts
                 try {
                     const ban = await validateAndFetchModerationEntry('moderation/bans', lower);
                     if (ban) {
@@ -275,12 +322,108 @@
                 }
             }, []);
 
+            // Listen for moderation lists (bans/timeouts) globally for admin panel usage
+            useEffect(() => {
+                const bansRef = ref(db, 'moderation/bans');
+                const timeoutsRef = ref(db, 'moderation/timeouts');
+
+                const unsubBans = onValue(bansRef, snapshot => {
+                    const val = snapshot.val() || {};
+                    const next = {};
+                    for (const [k, v] of Object.entries(val)) {
+                        if (v.expiresAt && Date.now() > v.expiresAt) {
+                            remove(ref(db, `moderation/bans/${k}`));
+                        } else next[k] = v;
+                    }
+                    setModeration(prev => ({ ...prev, bans: next }));
+                });
+
+                const unsubTimeouts = onValue(timeoutsRef, snapshot => {
+                    const val = snapshot.val() || {};
+                    const next = {};
+                    for (const [k, v] of Object.entries(val)) {
+                        if (v.expiresAt && Date.now() > v.expiresAt) {
+                            remove(ref(db, `moderation/timeouts/${k}`));
+                        } else next[k] = v;
+                    }
+                    setModeration(prev => ({ ...prev, timeouts: next }));
+                });
+
+                // No explicit off here; keep listeners while app active.
+                return () => {};
+            }, []);
+
+            useEffect(() => {
+                if (!username) return;
+
+                const lower = username.toLowerCase();
+                // Listen to moderation entries directly for the current user
+                const banRef = ref(db, `moderation/bans/${lower}`);
+                const timeoutRef = ref(db, `moderation/timeouts/${lower}`);
+
+                const unsubBan = onValue(banRef, snapshot => {
+                    const val = snapshot.val();
+                    if (val) {
+                        // enforce: remove player's DB entry so they're kicked
+                        set(ref(db, `players/${playerId.current}`), null);
+                        setSelfModeration({ type: 'ban', ...val });
+                    } else {
+                        setSelfModeration(prev => (prev && prev.type === 'ban' ? null : prev));
+                    }
+                });
+
+                const unsubTimeout = onValue(timeoutRef, snapshot => {
+                    const val = snapshot.val();
+                    if (val) {
+                        set(ref(db, `players/${playerId.current}`), null);
+                        // If both exist, ban overrides; we set whichever arrives last but ensure not to clear ban on timeout removal.
+                        setSelfModeration(prev => (prev && prev.type === 'ban' ? prev : { type: 'timeout', ...val }));
+                    } else {
+                        setSelfModeration(prev => (prev && prev.type === 'timeout' ? null : prev));
+                    }
+                });
+
+                return () => {
+                    // Keep listeners for lifetime of username; no explicit unsubscribe due to firebase v9 onValue pattern in browser environment here
+                };
+            }, [username]);
+
+            useEffect(() => {
+                // countdown updater for selfModeration
+                if (!selfModeration) {
+                    setCountdown(null);
+                    return;
+                }
+                const update = () => {
+                    if (!selfModeration) return;
+                    if (!selfModeration.expiresAt) {
+                        setCountdown(null);
+                        return;
+                    }
+                    const remain = Math.max(0, selfModeration.expiresAt - Date.now());
+                    setCountdown(remain);
+                    if (remain <= 0) {
+                        // moderation expired; clear state
+                        setSelfModeration(null);
+                        setCountdown(null);
+                    }
+                };
+                update();
+                const id = setInterval(update, 1000);
+                return () => clearInterval(id);
+            }, [selfModeration]);
+
             useEffect(() => {
                 if (!username) return;
 
                 const handleKeyDown = (e) => {
+                    // If moderated and still active, block movement keys
                     const key = e.key.toLowerCase();
                     if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) {
+                        if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                            e.preventDefault();
+                            return;
+                        }
                         e.preventDefault();
                         keysPressed.current[key] = true;
                     }
@@ -291,6 +434,12 @@
                 };
 
                 const updatePosition = () => {
+                    // If moderated, skip movement entirely
+                    if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                        animationFrame.current = requestAnimationFrame(updatePosition);
+                        return;
+                    }
+
                     setPosition(prev => {
                         let moveX = 0, moveY = 0;
                         if (keysPressed.current['w'] || keysPressed.current['arrowup']) moveY -= 1;
@@ -323,11 +472,17 @@
                     window.removeEventListener('keyup', handleKeyUp);
                     if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
                 };
-            }, [username]);
+            }, [username, selfModeration]);
 
-            // Join Firebase
+            // Join Firebase (only join if not currently moderated)
             useEffect(() => {
                 if (!username) return;
+                // If moderated, don't write presence
+                if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                    // ensure not present in players
+                    set(ref(db, `players/${playerId.current}`), null);
+                    return;
+                }
                 const playerRef = ref(db, `players/${playerId.current}`);
                 set(playerRef, {
                     username,
@@ -337,13 +492,18 @@
                     admin: adminNames.includes(username.toLowerCase())
                 });
                 onDisconnect(playerRef).remove();
-            }, [username]);
+            }, [username, selfModeration]);
 
-            // Sync position to Firebase (throttled)
+            // Sync position to Firebase (throttled) only when not moderated
             useEffect(() => {
                 if (!username) return;
                 const playerRef = ref(db, `players/${playerId.current}`);
                 const interval = setInterval(() => {
+                    // if moderated, clear presence
+                    if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                        set(playerRef, null);
+                        return;
+                    }
                     set(playerRef, {
                         username,
                         x: position.x,
@@ -353,7 +513,7 @@
                     });
                 }, 66);
                 return () => clearInterval(interval);
-            }, [username, position.x, position.y, selectedCharacter]);
+            }, [username, position.x, position.y, selectedCharacter, selfModeration]);
 
             // Listen to all players
             useEffect(() => {
@@ -361,40 +521,6 @@
                 return onValue(playersRef, snapshot => {
                     setPlayers(snapshot.val() || {});
                 });
-            }, []);
-
-            // Listen to moderation lists
-            useEffect(() => {
-                const bansRef = ref(db, 'moderation/bans');
-                const timeoutsRef = ref(db, 'moderation/timeouts');
-
-                const unsubBans = onValue(bansRef, snapshot => {
-                    const val = snapshot.val() || {};
-                    // filter expired on client (server should also handle)
-                    const next = {};
-                    for (const [k, v] of Object.entries(val)) {
-                        if (v.expiresAt && Date.now() > v.expiresAt) {
-                            // remove expired
-                            remove(ref(db, `moderation/bans/${k}`));
-                        } else next[k] = v;
-                    }
-                    setModeration(prev => ({ ...prev, bans: next }));
-                });
-
-                const unsubTimeouts = onValue(timeoutsRef, snapshot => {
-                    const val = snapshot.val() || {};
-                    const next = {};
-                    for (const [k, v] of Object.entries(val)) {
-                        if (v.expiresAt && Date.now() > v.expiresAt) {
-                            remove(ref(db, `moderation/timeouts/${k}`));
-                        } else next[k] = v;
-                    }
-                    setModeration(prev => ({ ...prev, timeouts: next }));
-                });
-
-                return () => {
-                    // onValue returns unsubscribe? It returns the callback; in firebase v9 onValue returns an unsubscribe function via returned function from onValue is same pattern: call .off not provided; but calling onValue returns the callback reference and we can't easily off here; simple no-op cleanup to avoid complex details
-                };
             }, []);
 
             // Smooth rendering for other players
@@ -440,9 +566,23 @@
             }
 
             const isAdminUser = adminNames.includes((username || '').toLowerCase());
-
-            // collect unique usernames from players for admin list
             const uniquePlayerUsernames = [...new Set(Object.values(players || {}).map(p => p.username).filter(Boolean))];
+
+            // Helper to format countdown ms into mm:ss or <s>s
+            const formatRemaining = (ms) => {
+                if (ms == null) return 'Permanent';
+                if (ms <= 1000) return '0s';
+                const totalSec = Math.ceil(ms / 1000);
+                if (totalSec < 60) return `${totalSec}s`;
+                const minutes = Math.floor(totalSec / 60);
+                const seconds = totalSec % 60;
+                if (minutes < 60) return `${minutes}:${String(seconds).padStart(2,'0')}`;
+                const hours = Math.floor(minutes / 60);
+                const minsRem = minutes % 60;
+                if (hours < 24) return `${hours}h ${minsRem}m`;
+                const days = Math.floor(hours / 24);
+                return `${days}d`;
+            };
 
             return React.createElement('div', { className: 'screen' },
                 React.createElement('div', { className: 'grid-bg' }),
@@ -467,6 +607,7 @@
                     )
                 ),
 
+                // HUD
                 React.createElement('div', { className: 'hud' },
                     React.createElement('button', { className: 'babies-button', onClick: () => setShowModal(true) }, '👶 Babies'),
                     isAdminUser && React.createElement('button', { className: 'admin-button', onClick: () => setShowAdminModal(true) }, '🔧 Admin Panel'),
@@ -525,7 +666,6 @@
                                         ),
                                         React.createElement('div', null,
                                             React.createElement('button', { className: 'small-btn ghost', onClick: () => {
-                                                // Ban options
                                                 const choice = window.prompt('Ban duration: (10s,1m,10m,1h,1d,perm)', '10s');
                                                 if (choice) applyModeration(u, 'ban', choice);
                                             } }, 'Ban'),
@@ -534,7 +674,6 @@
                                                 if (choice) applyModeration(u, 'timeout', choice);
                                             } }, 'Timeout'),
                                             React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
-                                                // Unban & remove timeout
                                                 const doUnban = window.confirm(`Unban ${u}?`);
                                                 if (doUnban) removeModeration(u, 'ban');
                                             } }, 'Unban'),
@@ -587,6 +726,21 @@
                         React.createElement('div', { style: { marginTop: 12 } },
                             React.createElement('button', { className: 'close-modal', onClick: () => setShowAdminModal(false) }, 'Close Admin Panel')
                         )
+                    )
+                ),
+
+                // Moderation overlay for the local user (if they are banned/timeout)
+                selfModeration && React.createElement('div', { className: 'mod-overlay' },
+                    React.createElement('div', { className: 'mod-card' },
+                        React.createElement('div', { className: 'mod-title' }, selfModeration.type === 'ban' ? 'Banned' : 'Timed Out'),
+                        selfModeration.expiresAt == null
+                            ? React.createElement('div', { className: 'mod-perm' }, 'This is permanent.')
+                            : React.createElement('div', { className: 'mod-desc' }, `You will be able to rejoin when the timer ends.`),
+                        React.createElement('img', { className: 'flash-img', src: MOD_FLASH_IMAGE, alt: 'moderation flash' }),
+                        selfModeration.expiresAt == null
+                            ? React.createElement('div', { className: 'mod-countdown' }, 'Permanent')
+                            : React.createElement('div', { className: 'mod-countdown' }, formatRemaining(countdown)),
+                        React.createElement('div', { className: 'mod-desc' }, selfModeration.moderator ? `Moderator: ${selfModeration.moderator}` : '')
                     )
                 )
             );
