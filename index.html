@@ -174,6 +174,13 @@
             transition: all 75ms;
             transform: translateX(-50%);
         }
+        /* Admin rainbow style */
+        .username-label.admin {
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8f00ff);
+            color: white;
+            box-shadow: 0 0 12px rgba(0,0,0,0.6);
+            -webkit-background-clip: padding-box;
+        }
         .center-container {
             width: 100vw;
             height: 100vh;
@@ -321,8 +328,32 @@
                 jollybaby: {
                     name: 'Jolly Baby',
                     image: 'https://i.ibb.co/8DNHS4n9/jollybaby.png'
+                },
+                /* Admin-specific options (provided images) */
+                kingderrick_admin: {
+                    name: 'King Derrick',
+                    image: 'https://i.ibb.co/MyRFhbh7/kingderrick.png'
+                },
+                grant_admin: {
+                    name: 'Grant',
+                    image: 'https://i.ibb.co/KjmZGy3V/grant.png'
+                },
+                manny_admin: {
+                    name: 'Manny',
+                    image: 'https://i.ibb.co/0jjX9X56/manny.png'
+                },
+                daniel_admin: {
+                    name: 'Daniel',
+                    image: 'https://i.ibb.co/Gf47wYjN/daniel.png'
+                },
+                levi_admin: {
+                    name: 'Levi',
+                    image: 'https://i.ibb.co/XZPzfYNg/levi.png'
                 }
             };
+
+            const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
+            const ADMIN_PASSWORD = 'chickenfishfarting';
 
             const badWords = [
                 'fuck', 'shit', 'damn', 'bitch', 'ass', 'asshole', 'bastard', 'crap',
@@ -356,6 +387,16 @@
                 if (containsBadWord(trimmedUsername)) {
                     setError('Username contains inappropriate language');
                     return;
+                }
+
+                // Admin password check (case-insensitive username match)
+                const lower = trimmedUsername.toLowerCase();
+                if (adminNames.includes(lower)) {
+                    const pw = window.prompt('Enter admin password for ' + trimmedUsername + ':', '');
+                    if (pw !== ADMIN_PASSWORD) {
+                        setError('Incorrect admin password');
+                        return;
+                    }
                 }
 
                 localStorage.setItem('movement_hub_username', trimmedUsername);
@@ -445,7 +486,8 @@
                     username,
                     x: position.x,
                     y: position.y,
-                    character: selectedCharacter
+                    character: selectedCharacter,
+                    admin: adminNames.includes(username.toLowerCase()) // mark admin flag
                 });
                 onDisconnect(playerRef).remove();
             }, [username]);
@@ -459,7 +501,8 @@
                         username,
                         x: position.x,
                         y: position.y,
-                        character: selectedCharacter
+                        character: selectedCharacter,
+                        admin: adminNames.includes(username.toLowerCase())
                     });
                 }, 66);
                 return () => clearInterval(interval);
@@ -481,7 +524,8 @@
                             x: position.x,
                             y: position.y,
                             username,
-                            character: selectedCharacter
+                            character: selectedCharacter,
+                            admin: adminNames.includes((username || '').toLowerCase())
                         };
                     } else {
                         const prev = renderRef.current[id] || p;
@@ -489,7 +533,8 @@
                             x: prev.x + (p.x - prev.x) * 0.25,
                             y: prev.y + (p.y - prev.y) * 0.25,
                             username: p.username,
-                            character: p.character
+                            character: p.character,
+                            admin: p.admin || (adminNames.includes((p.username || '').toLowerCase()))
                         };
                     }
                 }
@@ -548,7 +593,7 @@
                             })
                         ),
                         React.createElement('div', {
-                            className: 'username-label',
+                            className: 'username-label' + (p.admin ? ' admin' : ''),
                             style: { 
                                 left: `${p.x + 24}px`, 
                                 top: `${p.y + 58}px`
@@ -585,7 +630,8 @@
                                             username,
                                             x: position.x,
                                             y: position.y,
-                                            character: key
+                                            character: key,
+                                            admin: adminNames.includes(username.toLowerCase())
                                         });
                                         setShowModal(false);
                                     }
