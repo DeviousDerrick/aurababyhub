@@ -9,7 +9,7 @@
         body { margin: 0; padding: 0; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         .screen { width: 100vw; height: 100vh; background: linear-gradient(135deg,#1e3a8a 0%,#581c87 50%,#312e81 100%); position: relative; overflow: hidden; }
         .grid-bg { position: absolute; inset: 0; opacity: 0.2; background-image: linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 50px 50px; }
-        .player { position: absolute; width: 48px; height: 48px; background: linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%); border-radius: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.6); transition: all 75ms; }
+        .player { position: absolute; width: 48px; height: 48px; background: linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%); border-radius: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.6); transition: all 75ms; overflow: hidden; }
         .hud { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 8px; }
         .babies-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 14px; margin-bottom: 8px; transition: all 0.2s; display: block; width: 100%; }
         .admin-button { background: linear-gradient(90deg,#f97316 0%,#ef4444 100%); color: white; font-weight: bold; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; margin-top: 8px; transition: all 0.15s; display: block; width: 100%; }
@@ -189,15 +189,14 @@
                 daniel_admin: { name: 'Daniel', image: 'https://i.ibb.co/Gf47wYjN/daniel.png' },
                 levi_admin: { name: 'Levi', image: 'https://i.ibb.co/XZPzfYNg/levi.png' },
 
-                // new babies requested (using the ibb.co page links you provided)
-                // note: these are ibb.co page links — if you'd prefer direct image i.ibb.co URLs replace them
-                judgmentbaby: { name: 'Judgment Baby', image: 'https://ibb.co/b5MrNmRL' },
-                baby_that_holds_aura: { name: 'The Baby That Holds Aura', image: 'https://ibb.co/jmTHJfh' },
-                gangsta_baby: { name: 'Gangsta Baby', image: 'https://ibb.co/VYM6ZJFD' }
+                // requested babies using the URLs you provided
+                judgmentbaby: { name: 'Judgment Baby', image: 'https://i.ibb.co/Kxp9Vhz7/judgment.jpg' },
+                baby_that_holds_aura: { name: 'The Baby That Holds Aura', image: 'https://i.ibb.co/jmTHJfh/The-Baby-That-Holds-Aura.jpg' },
+                gangsta_baby: { name: 'Gangsta Baby', image: 'https://i.ibb.co/m5hpwbnt/gangstababy.jpg' }
             };
 
-            // Image to flash when the local user is moderated (use Judgment Baby page link by default)
-            const MOD_FLASH_IMAGE = 'https://ibb.co/b5MrNmRL';
+            // Use judgment image for the ban/time-out flash overlay
+            const MOD_FLASH_IMAGE = 'https://i.ibb.co/Kxp9Vhz7/judgment.jpg';
 
             const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
             const ADMIN_PASSWORD = 'chickenfishfarting';
@@ -645,7 +644,8 @@
                             React.createElement('img', {
                                 src: characters[p.character]?.image || characters['aurababy'].image,
                                 alt: p.character,
-                                style: { width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }
+                                style: { width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' },
+                                onError: (e) => { e.target.src = characters['aurababy'].image; }
                             })
                         ),
                         React.createElement('div', {
@@ -683,7 +683,7 @@
                                         setShowModal(false);
                                     }
                                 },
-                                    React.createElement('img', { src: characters[key].image, alt: characters[key].name, className: 'character-image' }),
+                                    React.createElement('img', { src: characters[key].image, alt: characters[key].name, className: 'character-image', onError: (e)=>{ e.target.src = characters['aurababy'].image; } }),
                                     React.createElement('div', { className: 'character-name' }, characters[key].name)
                                 )
                             )
@@ -784,7 +784,7 @@
                         selfModeration.expiresAt == null
                             ? React.createElement('div', { className: 'mod-perm' }, 'This is permanent.')
                             : React.createElement('div', { className: 'mod-desc' }, `You will be able to rejoin when the timer ends.`),
-                        React.createElement('img', { className: 'flash-img', src: MOD_FLASH_IMAGE, alt: 'moderation flash' }),
+                        React.createElement('img', { className: 'flash-img', src: MOD_FLASH_IMAGE, alt: 'moderation flash', onError: (e)=>{ e.target.style.display='none'; } }),
                         selfModeration.expiresAt == null
                             ? React.createElement('div', { className: 'mod-countdown' }, 'Permanent')
                             : React.createElement('div', { className: 'mod-countdown' }, formatRemaining(countdown)),
