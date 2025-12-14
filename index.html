@@ -90,7 +90,7 @@
             border: 2px solid rgba(34, 211, 238, 0.5);
             border-radius: 16px;
             padding: 32px;
-            max-width: 600px;
+            max-width: 700px;
             width: 90%;
         }
         .modal-title {
@@ -102,14 +102,16 @@
         }
         .character-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+            max-height: 60vh;
+            overflow-y: auto;
         }
         .character-option {
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
-            padding: 16px;
+            padding: 12px;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
@@ -128,7 +130,7 @@
         }
         .character-image {
             width: 100%;
-            height: 150px;
+            height: 120px;
             object-fit: contain;
             margin-bottom: 12px;
             border-radius: 8px;
@@ -136,7 +138,7 @@
         .character-name {
             color: white;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 14px;
             text-align: center;
         }
         .close-modal {
@@ -261,6 +263,22 @@
         import React from 'https://cdn.skypack.dev/react@18.2.0';
         import ReactDOM from 'https://cdn.skypack.dev/react-dom@18.2.0';
 
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
+            authDomain: "s0lace-web.firebaseapp.com",
+            databaseURL: "https://s0lace-web-default-rtdb.firebaseio.com",
+            projectId: "s0lace-web",
+            storageBucket: "s0lace-web.firebasestorage.app",
+            messagingSenderId: "13647464646",
+            appId: "1:13647464646:web:87ecb82a32ab6f0efaafc7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
         const { useState, useEffect, useRef } = React;
 
         function MovementHub() {
@@ -270,6 +288,10 @@
             const [position, setPosition] = useState({ x: 200, y: 200 });
             const [showModal, setShowModal] = useState(false);
             const [selectedCharacter, setSelectedCharacter] = useState('aurababy');
+            const [players, setPlayers] = useState({});
+            
+            const playerId = useRef(crypto.randomUUID());
+            const renderRef = useRef({});
             const keysPressed = useRef({});
             const animationFrame = useRef(null);
 
@@ -283,6 +305,22 @@
                 goonerbaby: {
                     name: 'Goonerbaby',
                     image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png'
+                },
+                fattiebaby: {
+                    name: 'Fattie Baby',
+                    image: 'https://i.ibb.co/Kj0gKt2Q/fattiebaby.png'
+                },
+                zoely: {
+                    name: 'Zoely',
+                    image: 'https://i.ibb.co/PsXr9KgX/zoely.png'
+                },
+                hollybaby: {
+                    name: 'Holly Baby',
+                    image: 'https://i.ibb.co/DD8Py8yW/hollybaby.png'
+                },
+                jollybaby: {
+                    name: 'Jolly Baby',
+                    image: 'https://i.ibb.co/8DNHS4n9/jollybaby.png'
                 }
             };
 
@@ -399,6 +437,65 @@
                 };
             }, [username]);
 
+            // Join Firebase
+            useEffect(() => {
+                if (!username) return;
+                const playerRef = ref(db, `players/${playerId.current}`);
+                set(playerRef, {
+                    username,
+                    x: position.x,
+                    y: position.y,
+                    character: selectedCharacter
+                });
+                onDisconnect(playerRef).remove();
+            }, [username]);
+
+            // Sync position to Firebase (throttled)
+            useEffect(() => {
+                if (!username) return;
+                const playerRef = ref(db, `players/${playerId.current}`);
+                const interval = setInterval(() => {
+                    set(playerRef, {
+                        username,
+                        x: position.x,
+                        y: position.y,
+                        character: selectedCharacter
+                    });
+                }, 66);
+                return () => clearInterval(interval);
+            }, [username, position.x, position.y, selectedCharacter]);
+
+            // Listen to all players
+            useEffect(() => {
+                onValue(ref(db, 'players'), snapshot => {
+                    setPlayers(snapshot.val() || {});
+                });
+            }, []);
+
+            // Smooth rendering for other players
+            useEffect(() => {
+                const next = {};
+                for (const [id, p] of Object.entries(players)) {
+                    if (id === playerId.current) {
+                        next[id] = {
+                            x: position.x,
+                            y: position.y,
+                            username,
+                            character: selectedCharacter
+                        };
+                    } else {
+                        const prev = renderRef.current[id] || p;
+                        next[id] = {
+                            x: prev.x + (p.x - prev.x) * 0.25,
+                            y: prev.y + (p.y - prev.y) * 0.25,
+                            username: p.username,
+                            character: p.character
+                        };
+                    }
+                }
+                renderRef.current = next;
+            }, [players, position, username, selectedCharacter]);
+
             if (!username) {
                 return React.createElement('div', { className: 'screen center-container' },
                     React.createElement('div', { className: 'welcome-box' },
@@ -431,28 +528,34 @@
 
             return React.createElement('div', { className: 'screen' },
                 React.createElement('div', { className: 'grid-bg' }),
-                React.createElement('div', {
-                    className: 'player',
-                    style: { left: `${position.x}px`, top: `${position.y}px` }
-                },
-                    React.createElement('img', {
-                        src: characters[selectedCharacter].image,
-                        alt: characters[selectedCharacter].name,
-                        style: {
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'contain',
-                            borderRadius: '8px'
-                        }
-                    })
+                
+                // Render all players
+                Object.entries(renderRef.current).map(([id, p]) =>
+                    React.createElement(React.Fragment, { key: id },
+                        React.createElement('div', {
+                            className: 'player',
+                            style: { left: `${p.x}px`, top: `${p.y}px` }
+                        },
+                            React.createElement('img', {
+                                src: characters[p.character]?.image,
+                                alt: p.character,
+                                style: {
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'contain',
+                                    borderRadius: '8px'
+                                }
+                            })
+                        ),
+                        React.createElement('div', {
+                            className: 'username-label',
+                            style: { 
+                                left: `${p.x + 24}px`, 
+                                top: `${p.y + 58}px`
+                            }
+                        }, p.username)
+                    )
                 ),
-                React.createElement('div', {
-                    className: 'username-label',
-                    style: { 
-                        left: `${position.x + 24}px`, 
-                        top: `${position.y + 58}px`
-                    }
-                }, username),
                 React.createElement('div', { className: 'hud' },
                     React.createElement('button', { 
                         className: 'babies-button',
@@ -472,33 +575,28 @@
                     },
                         React.createElement('div', { className: 'modal-title' }, 'Choose Your Character'),
                         React.createElement('div', { className: 'character-grid' },
-                            React.createElement('div', {
-                                className: `character-option ${selectedCharacter === 'aurababy' ? 'selected' : ''}`,
-                                onClick: () => {
-                                    setSelectedCharacter('aurababy');
-                                    setShowModal(false);
-                                }
-                            },
-                                React.createElement('img', {
-                                    src: characters.aurababy.image,
-                                    alt: 'Aurababy',
-                                    className: 'character-image'
-                                }),
-                                React.createElement('div', { className: 'character-name' }, 'Aurababy')
-                            ),
-                            React.createElement('div', {
-                                className: `character-option ${selectedCharacter === 'goonerbaby' ? 'selected' : ''}`,
-                                onClick: () => {
-                                    setSelectedCharacter('goonerbaby');
-                                    setShowModal(false);
-                                }
-                            },
-                                React.createElement('img', {
-                                    src: characters.goonerbaby.image,
-                                    alt: 'Goonerbaby',
-                                    className: 'character-image'
-                                }),
-                                React.createElement('div', { className: 'character-name' }, 'Goonerbaby')
+                            Object.keys(characters).map(key => 
+                                React.createElement('div', {
+                                    key: key,
+                                    className: `character-option ${selectedCharacter === key ? 'selected' : ''}`,
+                                    onClick: () => {
+                                        setSelectedCharacter(key);
+                                        set(ref(db, `players/${playerId.current}`), {
+                                            username,
+                                            x: position.x,
+                                            y: position.y,
+                                            character: key
+                                        });
+                                        setShowModal(false);
+                                    }
+                                },
+                                    React.createElement('img', {
+                                        src: characters[key].image,
+                                        alt: characters[key].name,
+                                        className: 'character-image'
+                                    }),
+                                    React.createElement('div', { className: 'character-name' }, characters[key].name)
+                                )
                             )
                         ),
                         React.createElement('button', {
