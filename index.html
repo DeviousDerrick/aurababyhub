@@ -138,6 +138,59 @@
                   to { transform: translateX(-50%) translateY(0); opacity: 1; }
               }
 
+              /* Orb UI */
+              .orb-container {
+                  position: fixed;
+                  left: 50%;
+                  top: 50%;
+                  transform: translate(-50%, -50%);
+                  z-index: 1600;
+                  display:flex;
+                  align-items:center;
+                  justify-content:center;
+                  pointer-events: none; /* image handles clicks */
+              }
+              .orb-img {
+                  width: 140px;
+                  height: 140px;
+                  border-radius: 999px;
+                  cursor: pointer;
+                  pointer-events: auto;
+                  transition: transform 140ms ease;
+                  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+              }
+              .orb-img:active { transform: scale(0.97); }
+              .orb-info {
+                  position: fixed;
+                  top: 64px;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  z-index: 2150;
+                  color: #fff;
+                  font-weight: 900;
+                  background: rgba(0,0,0,0.45);
+                  padding: 8px 14px;
+                  border-radius: 10px;
+                  border: 1px solid rgba(255,255,255,0.06);
+              }
+              .orb-leaderboard {
+                  position: fixed;
+                  top: calc(64px + 46px);
+                  left: 50%;
+                  transform: translateX(-50%);
+                  z-index: 2150;
+                  color: #fff;
+                  background: rgba(0,0,0,0.45);
+                  padding: 8px 12px;
+                  border-radius: 10px;
+                  border: 1px solid rgba(255,255,255,0.06);
+                  width: 320px;
+                  max-width: 40vw;
+                  font-weight:700;
+              }
+              .orb-leaderboard h4 { margin-bottom: 6px; color:#ffd54a; font-weight:900; }
+              .orb-row { display:flex; justify-content:space-between; gap:6px; font-weight:800; color:#fff; margin:2px 0; }
+
               /* Chat UI (top-right) */
               .chat-box {
                   position: fixed;
@@ -156,7 +209,7 @@
                   display: flex;
                   flex-direction: column;
               }
-              .chat-header { font-weight: 800; text-align: center; margin: 6px 0 8px 0; color: #22d3ee; }
+              .chat-header { display:flex; align-items:center; justify-content:space-between; font-weight: 800; margin: 6px 0 8px 0; color: #22d3ee; gap:8px; }
               .chat-messages { display:flex; flex-direction:column-reverse; gap:8px; overflow:hidden; max-height: 220px; padding: 6px; }
               .chat-message { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 8px 10px; border-radius: 8px; font-size: 13px; word-break: break-word; }
               .chat-meta { font-size: 11px; color: #9ca3af; margin-bottom: 4px; font-weight:700; display:flex; align-items:center; gap:8px; }
@@ -166,6 +219,7 @@
               .chat-input { flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); color: white; outline: none; }
               .chat-send-btn { padding: 8px 12px; border-radius: 8px; border: none; background: linear-gradient(90deg,#22d3ee,#3b82f6); color: white; font-weight: 700; cursor: pointer; }
               .chat-send-btn:active { transform: translateY(1px); }
+              .chat-recipient { padding:6px 8px; border-radius:6px; background: rgba(255,255,255,0.03); color:#cbd5e1; border:1px solid rgba(255,255,255,0.03); font-weight:800; }
 
               /* Bubble above character */
               .speech-bubble {
@@ -211,7 +265,9 @@
       import React from 'https://cdn.skypack.dev/react@18.2.0';
       import ReactDOM from 'https://cdn.skypack.dev/react-dom@18.2.0';
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-      import { getDatabase, ref, set, onValue, onDisconnect, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+      import {
+        getDatabase, ref, set, onValue, onDisconnect, get, remove, update, runTransaction
+      } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
       const firebaseConfig = {
           apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
@@ -258,7 +314,9 @@
           // Chat (online via Firebase)
           const [chatMessages, setChatMessages] = useState([]); // newest last
           const [chatInput, setChatInput] = useState('');
+          const [chatRecipient, setChatRecipient] = useState('all'); // 'all' or username
           const CHAT_MAX = 50;
+          const CHAT_COOLDOWN_MS = 5000;
           const BUBBLE_DURATION = 5000;
 
           // Name tags (online via Firebase)
@@ -267,6 +325,11 @@
           // active speech bubbles per playerId { [playerId]: { id, text, expiresAt } }
           const [bubbles, setBubbles] = useState({});
           const bubbleTimeouts = useRef({});
+
+          // orb
+          const [orbCount, setOrbCount] = useState(0);
+          const [orbLeaderboard, setOrbLeaderboard] = useState([]); // [{username, count}]
+          const ORB_BUBBLE_MSG_MS = 1200;
 
           const characters = {
               aurababy: { name: 'Aurababy', image: 'https://i.ibb.co/nq467xv6/aurababy.png' },
@@ -697,29 +760,38 @@
               renderRef.current = next;
           }, [players, position, username, selectedCharacter]);
 
-          // --- Online Chat: listen to chat/messages and nameTags ---
+          // --- Online Chat: listen to chat/messages and nameTags, and orb data ---
           useEffect(() => {
               const msgsRef = ref(db, 'chat/messages');
-              const unsubMsgs = onValue(msgsRef, snapshot => {
+              onValue(msgsRef, snapshot => {
                   const val = snapshot.val() || {};
-                  // convert to array sorted by ts ascending
                   const arr = Object.entries(val).map(([k,v]) => ({ id: k, ...v })).sort((a,b) => (a.ts||0) - (b.ts||0));
-                  setChatMessages(arr.slice(-CHAT_MAX));
-                  // populate bubbles for recent messages
+                  // filter by visibility for the current user
+                  const lowerCur = (username || '').toLowerCase();
+                  const filtered = arr.filter(m => {
+                      if (!m.recipient || m.recipient === 'all') return true; // public
+                      // visible if I'm the recipient or I'm the sender
+                      if (m.recipient === lowerCur) return true;
+                      if ((m.username || '') === username) return true;
+                      return false;
+                  }).slice(-CHAT_MAX);
+                  setChatMessages(filtered);
+
+                  // show bubbles for visible messages within BUBBLE_DURATION
                   const now = Date.now();
-                  arr.slice(-20).forEach(m => {
+                  arr.forEach(m => {
+                      // only create bubble when message is visible to this client
+                      const visible = (!m.recipient || m.recipient === 'all') ||
+                          m.recipient === lowerCur || (m.username === username);
+                      if (!visible) return;
                       if (!m.playerId) return;
-                      // show bubble for players for messages within BUBBLE_DURATION
                       const expiresAt = (m.ts || now) + BUBBLE_DURATION;
                       if (expiresAt > now) {
-                          // set bubble
                           setBubbles(prev => {
-                              // if already set and same id, skip
                               if (prev[m.playerId] && prev[m.playerId].id === m.id) return prev;
                               const next = { ...prev, [m.playerId]: { id: m.id, text: m.text, expiresAt } };
                               return next;
                           });
-                          // clear previous timeout
                           if (bubbleTimeouts.current[m.playerId]) {
                               clearTimeout(bubbleTimeouts.current[m.playerId]);
                           }
@@ -737,14 +809,24 @@
               });
 
               const tagsRef = ref(db, 'nameTags');
-              const unsubTags = onValue(tagsRef, snapshot => {
+              onValue(tagsRef, snapshot => {
                   setNameTags(snapshot.val() || {});
               });
 
-              return () => {
-                  // onValue doesn't return unsubscribe directly in this import, but it returns the callback; using onValue returns the callback to remove when using off - for simplicity we'll not explicitly call off here as page lifecycle is the entire app. (If desired, replace with explicit off(dbRef, 'value', callback))
-              };
-          }, []);
+              const orbCountRef = ref(db, 'orb/count');
+              onValue(orbCountRef, snapshot => {
+                  setOrbCount(snapshot.val() || 0);
+              });
+
+              const orbClicksRef = ref(db, 'orb/clicks');
+              onValue(orbClicksRef, snapshot => {
+                  const val = snapshot.val() || {};
+                  const arr = Object.entries(val).map(([username, count]) => ({ username, count })).sort((a,b) => b.count - a.count);
+                  setOrbLeaderboard(arr.slice(0,5));
+              });
+
+              // no explicit unsubscribe here — app lifetime is page; onValue will update live
+          }, [username]);
 
           // helper to assign/remove tags (admin only) - now writes to Firebase so tags are global
           const assignTag = async (targetUsername, tagKey) => {
@@ -770,7 +852,7 @@
               setChatInput(v);
           };
 
-          // Send chat (online)
+          // Send chat (online) with cooldown and recipient support
           const handleChatSend = async (e) => {
               if (e && e.preventDefault) e.preventDefault();
               if (!username) return;
@@ -784,15 +866,39 @@
               // prevent messages with banned words
               if (containsBadWord(text)) return alert('Message contains inappropriate language');
 
-              const id = crypto.randomUUID();
-              const msg = { username, text, ts: Date.now(), playerId: playerId.current };
+              const lower = username.toLowerCase();
+
+              // check cooldown stored in DB
               try {
+                  const lastRef = ref(db, `chat/lastChat/${lower}`);
+                  const lastSnap = await get(lastRef);
+                  const last = lastSnap.exists() ? (lastSnap.val() || 0) : 0;
+                  const now = Date.now();
+                  if (now - last < CHAT_COOLDOWN_MS) {
+                      const rem = Math.ceil((CHAT_COOLDOWN_MS - (now - last)) / 1000);
+                      return alert(`Please wait ${Math.ceil((CHAT_COOLDOWN_MS - (now - last))/1000)}s before sending another message.`);
+                  }
+
+                  // prepare message
+                  const id = crypto.randomUUID();
+                  const msg = {
+                      username,
+                      text,
+                      ts: now,
+                      playerId: playerId.current,
+                      recipient: (chatRecipient === 'all' ? null : (chatRecipient || null))
+                  };
+
+                  // write message and update lastChat atomically-ish (two writes)
                   await set(ref(db, `chat/messages/${id}`), msg);
+                  await set(lastRef, now);
+
+                  // if private, create a 'private index' mapping for quicker retrieval (optional)
+                  // handled by recipient field filtering on clients
+
               } catch (err) {
                   console.error('failed to send message', err);
-                  // fallback to local if write fails
-                  const localMsg = { id, ...msg };
-                  setChatMessages(prev => [...prev.slice(-CHAT_MAX+1), localMsg]);
+                  alert('Failed to send — try again.');
               }
 
               setChatInput('');
@@ -803,6 +909,38 @@
               if (e.key === 'Enter') {
                   e.preventDefault();
                   handleChatSend();
+              }
+          };
+
+          // Orb click: increment global orb count (transaction) & increment user's click count
+          const handleOrbClick = async () => {
+              if (!username) {
+                  showAnnouncement('Sign in to click the orb', 'info');
+                  return;
+              }
+              if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                  return showAnnouncement('You are moderated and cannot click the orb', 'info');
+              }
+              try {
+                  // atomically increment orb count
+                  const countRef = ref(db, 'orb/count');
+                  await runTransaction(countRef, (current) => {
+                      return (current || 0) + 1;
+                  });
+
+                  // increment user's click count under orb/clicks/{lower}
+                  const lower = username.toLowerCase();
+                  const userClickRef = ref(db, `orb/clicks/${lower}`);
+                  // simple transaction for user's clicks
+                  await runTransaction(userClickRef, (current) => {
+                      return (current || 0) + 1;
+                  });
+
+                  // small feedback announcement
+                  showAnnouncement(`+1 Aura!`, 'info');
+
+              } catch (err) {
+                  console.error('orb click failed', err);
               }
           };
 
@@ -882,6 +1020,28 @@
                   className: `top-announcement ${announcement.type === 'ban' ? 'announce-ban' : announcement.type === 'timeout' ? 'announce-timeout' : ''}`
               }, announcement.text),
 
+              // Orb info & leaderboard
+              React.createElement('div', { className: 'orb-info' }, `Orbs Aura: ${orbCount}`),
+              React.createElement('div', { className: 'orb-leaderboard' },
+                  React.createElement('h4', null, 'Aura Leaderboard'),
+                  orbLeaderboard.length === 0 ? React.createElement('div', { className: 'muted' }, 'No clicks yet') :
+                      orbLeaderboard.map((r, idx) => React.createElement('div', { key: r.username, className: 'orb-row' },
+                          React.createElement('div', null, `${idx+1}. ${r.username}`),
+                          React.createElement('div', null, r.count)
+                      ))
+              ),
+
+              // Orb (center)
+              React.createElement('div', { className: 'orb-container' },
+                  React.createElement('img', {
+                      src: 'https://i.ibb.co/KPY69kc/aura-orb.png', // try i.ibb.co variant — if fails the provided page will still work for many hosts
+                      alt: 'Orb of Aura',
+                      className: 'orb-img',
+                      onClick: handleOrbClick,
+                      onError: (e) => { /* fallback to the page URL if direct fails */ e.target.src = 'https://ibb.co/KPY69kc'; }
+                  })
+              ),
+
               // Render all players
               Object.entries(renderRef.current).map(([id, p]) =>
                   React.createElement(React.Fragment, { key: id },
@@ -923,13 +1083,24 @@
 
               // Chat box (online)
               React.createElement('div', { className: 'chat-box' },
-                  React.createElement('div', { className: 'chat-header' }, 'Chat'),
+                  React.createElement('div', { className: 'chat-header' },
+                      React.createElement('div', null, 'Chat'),
+                      React.createElement('select', {
+                          className: 'chat-recipient',
+                          value: chatRecipient,
+                          onChange: (e) => setChatRecipient(e.target.value)
+                      },
+                          React.createElement('option', { value: 'all' }, 'All'),
+                          // populate current players as possible recipients
+                          uniquePlayerUsernames.map(u => React.createElement('option', { key: u, value: u.toLowerCase() }, u))
+                      )
+                  ),
                   React.createElement('div', { className: 'chat-messages' },
                       // show most recent messages on top (we display reversed order in css)
                       chatMessages.slice().reverse().map(m =>
                           React.createElement('div', { key: m.id, className: 'chat-message' },
                               React.createElement('div', { className: 'chat-meta' },
-                                  React.createElement('div', null, m.username),
+                                  React.createElement('div', null, m.username + (m.recipient ? ` → ${m.recipient}` : '')),
                                   renderChatTag(m.username)
                               ),
                               React.createElement('div', null, m.text)
@@ -947,7 +1118,8 @@
                           autoComplete: 'off'
                       }),
                       React.createElement('button', { type: 'button', className: 'chat-send-btn', onClick: handleChatSend }, 'Send')
-                  )
+                  ),
+                  React.createElement('div', { style: { marginTop: 6, fontSize: 12, color: '#9ca3af', textAlign:'center' } }, `Cooldown: ${CHAT_COOLDOWN_MS/1000}s per message`)
               ),
 
               // Character modal
