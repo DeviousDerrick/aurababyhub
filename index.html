@@ -211,7 +211,7 @@
       import React from 'https://cdn.skypack.dev/react@18.2.0';
       import ReactDOM from 'https://cdn.skypack.dev/react-dom@18.2.0';
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-      import { getDatabase, ref, set, onValue, onDisconnect, get, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+      import { getDatabase, ref, set, onValue, onDisconnect, get, remove, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
       const firebaseConfig = {
           apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
@@ -255,16 +255,18 @@
 
           const SPEED = 4;
 
-          // Chat (local-only, no Firebase)
+          // Chat (online via Firebase)
           const [chatMessages, setChatMessages] = useState([]); // newest last
           const [chatInput, setChatInput] = useState('');
-          const [selfBubble, setSelfBubble] = useState(null);
-          const CHAT_MAX = 10;
+          const CHAT_MAX = 50;
           const BUBBLE_DURATION = 5000;
 
-          // Name tags state (mapping lower-username -> tag key). Stored locally for now.
+          // Name tags (online via Firebase)
           const [nameTags, setNameTags] = useState({});
-          const NAME_TAG_STORAGE_KEY = 'movement_hub_name_tags';
+
+          // active speech bubbles per playerId { [playerId]: { id, text, expiresAt } }
+          const [bubbles, setBubbles] = useState({});
+          const bubbleTimeouts = useRef({});
 
           const characters = {
               aurababy: { name: 'Aurababy', image: 'https://i.ibb.co/nq467xv6/aurababy.png' },
@@ -309,7 +311,7 @@
           };
 
           const containsBadWord = (text) => {
-              const lowerText = text.toLowerCase();
+              const lowerText = (text || '').toLowerCase();
               return badWords.some(word => lowerText.includes(word));
           };
 
@@ -471,46 +473,9 @@
               if (stored) {
                   setUsername(stored);
               }
-              // load name tags from localStorage
-              try {
-                  const raw = localStorage.getItem(NAME_TAG_STORAGE_KEY);
-                  if (raw) {
-                      setNameTags(JSON.parse(raw));
-                  }
-              } catch (err) {
-                  console.warn('failed to parse saved name tags', err);
-              }
           }, []);
 
-          // persist nameTags to localStorage when changed
-          useEffect(() => {
-              try {
-                  localStorage.setItem(NAME_TAG_STORAGE_KEY, JSON.stringify(nameTags));
-              } catch (err) {
-                  console.warn('failed to save name tags', err);
-              }
-          }, [nameTags]);
-
-          // helper to assign/remove tags (admin only)
-          const assignTag = (targetUsername, tagKey) => {
-              if (!username) return alert('Sign in as admin to assign tags.');
-              if (!adminNames.includes((username || '').toLowerCase())) return alert('Only admins can assign tags.');
-              const lower = (targetUsername || '').toLowerCase();
-              setNameTags(prev => {
-                  const next = { ...prev };
-                  if (!tagKey || tagKey === 'none') {
-                      delete next[lower];
-                      showAnnouncement(`${targetUsername} tag removed by ${username}`, 'info');
-                  } else {
-                      next[lower] = tagKey;
-                      showAnnouncement(`${targetUsername} was given the ${tagKey} tag by ${username}`, 'info');
-                  }
-                  return next;
-              });
-          };
-
-          const removeTag = (targetUsername) => assignTag(targetUsername, 'none');
-
+          // Listen for moderation lists (bans/timeouts) globally for admin panel usage
           useEffect(() => {
               const bansRef = ref(db, 'moderation/bans');
               const timeoutsRef = ref(db, 'moderation/timeouts');
@@ -732,36 +697,103 @@
               renderRef.current = next;
           }, [players, position, username, selectedCharacter]);
 
+          // --- Online Chat: listen to chat/messages and nameTags ---
+          useEffect(() => {
+              const msgsRef = ref(db, 'chat/messages');
+              const unsubMsgs = onValue(msgsRef, snapshot => {
+                  const val = snapshot.val() || {};
+                  // convert to array sorted by ts ascending
+                  const arr = Object.entries(val).map(([k,v]) => ({ id: k, ...v })).sort((a,b) => (a.ts||0) - (b.ts||0));
+                  setChatMessages(arr.slice(-CHAT_MAX));
+                  // populate bubbles for recent messages
+                  const now = Date.now();
+                  arr.slice(-20).forEach(m => {
+                      if (!m.playerId) return;
+                      // show bubble for players for messages within BUBBLE_DURATION
+                      const expiresAt = (m.ts || now) + BUBBLE_DURATION;
+                      if (expiresAt > now) {
+                          // set bubble
+                          setBubbles(prev => {
+                              // if already set and same id, skip
+                              if (prev[m.playerId] && prev[m.playerId].id === m.id) return prev;
+                              const next = { ...prev, [m.playerId]: { id: m.id, text: m.text, expiresAt } };
+                              return next;
+                          });
+                          // clear previous timeout
+                          if (bubbleTimeouts.current[m.playerId]) {
+                              clearTimeout(bubbleTimeouts.current[m.playerId]);
+                          }
+                          const remaining = Math.max(0, expiresAt - Date.now());
+                          bubbleTimeouts.current[m.playerId] = setTimeout(() => {
+                              setBubbles(prev => {
+                                  const cp = { ...prev };
+                                  if (cp[m.playerId] && cp[m.playerId].id === m.id) delete cp[m.playerId];
+                                  return cp;
+                              });
+                              delete bubbleTimeouts.current[m.playerId];
+                          }, remaining);
+                      }
+                  });
+              });
+
+              const tagsRef = ref(db, 'nameTags');
+              const unsubTags = onValue(tagsRef, snapshot => {
+                  setNameTags(snapshot.val() || {});
+              });
+
+              return () => {
+                  // onValue doesn't return unsubscribe directly in this import, but it returns the callback; using onValue returns the callback to remove when using off - for simplicity we'll not explicitly call off here as page lifecycle is the entire app. (If desired, replace with explicit off(dbRef, 'value', callback))
+              };
+          }, []);
+
+          // helper to assign/remove tags (admin only) - now writes to Firebase so tags are global
+          const assignTag = async (targetUsername, tagKey) => {
+              if (!username) return alert('Sign in as admin to assign tags.');
+              if (!adminNames.includes((username || '').toLowerCase())) return alert('Only admins can assign tags.');
+              const lower = (targetUsername || '').toLowerCase();
+              if (!tagKey || tagKey === 'none') {
+                  await set(ref(db, `nameTags/${lower}`), null);
+                  showAnnouncement(`${targetUsername} tag removed by ${username}`, 'info');
+              } else {
+                  if (!tagDefs[tagKey]) return alert('Unknown tag');
+                  await set(ref(db, `nameTags/${lower}`), tagKey);
+                  showAnnouncement(`${targetUsername} was given the ${tagKey} tag by ${username}`, 'info');
+              }
+          };
+
           // Chat input change: enforce lowercase + only allowed characters (a-z, 0-9, space, underscore)
           const handleChatChange = (e) => {
               let v = e.target.value || '';
               v = v.toLowerCase();
               // strip disallowed characters
               v = v.replace(/[^a-z0-9 _]/g, '');
-              // optionally trim leading spaces
               setChatInput(v);
           };
 
-          // Send chat (local only)
-          const handleChatSend = (e) => {
+          // Send chat (online)
+          const handleChatSend = async (e) => {
               if (e && e.preventDefault) e.preventDefault();
               if (!username) return;
+              // if moderated, block
+              if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
+                  return alert('You are moderated and cannot chat.');
+              }
               const text = (chatInput || '').trim();
               if (!text) return;
               if (text.length > 200) return alert('Message too long (200 chars max)');
               // prevent messages with banned words
               if (containsBadWord(text)) return alert('Message contains inappropriate language');
 
-              const msg = { id: crypto.randomUUID(), username, text, ts: Date.now(), playerId: playerId.current };
-              setChatMessages(prev => {
-                  const next = [...prev, msg].slice(-CHAT_MAX);
-                  return next;
-              });
-              // show above self
-              setSelfBubble(msg);
-              setTimeout(() => {
-                  setSelfBubble(prev => (prev && prev.id === msg.id ? null : prev));
-              }, BUBBLE_DURATION);
+              const id = crypto.randomUUID();
+              const msg = { username, text, ts: Date.now(), playerId: playerId.current };
+              try {
+                  await set(ref(db, `chat/messages/${id}`), msg);
+              } catch (err) {
+                  console.error('failed to send message', err);
+                  // fallback to local if write fails
+                  const localMsg = { id, ...msg };
+                  setChatMessages(prev => [...prev.slice(-CHAT_MAX+1), localMsg]);
+              }
 
               setChatInput('');
           };
@@ -874,11 +906,11 @@
                           renderNameTagBar(p.username, p.admin)
                       ),
 
-                      // If this is the local player's rendering and we have a self bubble, show it above character
-                      (id === playerId.current && selfBubble) ? React.createElement('div', {
+                      // show speech bubble for any active bubble for this playerId
+                      bubbles[id] ? React.createElement('div', {
                           className: 'speech-bubble',
                           style: { left: `${p.x + 24}px`, top: `${p.y - 18}px` }
-                      }, selfBubble.text) : null
+                      }, bubbles[id].text) : null
                   )
               ),
 
@@ -889,7 +921,7 @@
                   React.createElement('div', { className: 'position' }, `(${Math.round(position.x)}, ${Math.round(position.y)})`)
               ),
 
-              // Chat box (local-only)
+              // Chat box (online)
               React.createElement('div', { className: 'chat-box' },
                   React.createElement('div', { className: 'chat-header' }, 'Chat'),
                   React.createElement('div', { className: 'chat-messages' },
@@ -969,9 +1001,9 @@
                                           moderation.timeouts[u.toLowerCase()] && React.createElement('div', { className: 'muted' }, '• timed out')
                                       ),
                                       React.createElement('div', null,
-                                          // tag selector (assign/remove) - only admins can do this (we are in admin modal)
+                                          // tag selector (assign/remove) - now writes to Firebase
                                           React.createElement('select', {
-                                              defaultValue: nameTags[u.toLowerCase()] || 'none',
+                                              value: nameTags[u.toLowerCase()] || 'none',
                                               onChange: (e) => {
                                                   const v = e.target.value;
                                                   assignTag(u, v === 'none' ? 'none' : v);
