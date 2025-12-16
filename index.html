@@ -31,7 +31,7 @@
               .close-modal { background: rgba(255,255,255,0.08); color: white; border: 1px solid rgba(255,255,255,0.18); padding: 10px 16px; border-radius: 8px; cursor: pointer; margin-top: 12px; width: 100%; }
               .close-modal:hover { background: rgba(255,255,255,0.12); }
               .position { font-size: 11px; color: #9ca3af; margin-top: 8px; }
-              .username-label { position: absolute; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: #22d3ee; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; pointer-events: none; transform: translateX(-50%); white-space: nowrap; }
+              .username-label { position: absolute; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: #22d3ee; padding: 4px 12px; border-radius: 6px; font-size: 14px; font-weight: bold; pointer-events: none; transform: translateX(-50%); white-space: nowrap; display:flex; flex-direction:column; align-items:center; gap:6px; }
               .username-label.admin { background: linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff); color: white; box-shadow: 0 0 12px rgba(0,0,0,0.6); }
               .center-container { width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; }
               .welcome-box { background: rgba(0,0,0,0.5); backdrop-filter: blur(16px); border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; border: 1px solid rgba(255,255,255,0.18); }
@@ -159,7 +159,9 @@
               .chat-header { font-weight: 800; text-align: center; margin: 6px 0 8px 0; color: #22d3ee; }
               .chat-messages { display:flex; flex-direction:column-reverse; gap:8px; overflow:hidden; max-height: 220px; padding: 6px; }
               .chat-message { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 8px 10px; border-radius: 8px; font-size: 13px; word-break: break-word; }
-              .chat-meta { font-size: 11px; color: #9ca3af; margin-bottom: 4px; font-weight:700; }
+              .chat-meta { font-size: 11px; color: #9ca3af; margin-bottom: 4px; font-weight:700; display:flex; align-items:center; gap:8px; }
+              .chat-tag { padding: 2px 6px; border-radius: 6px; color: #111; font-weight:800; font-size:12px; display:inline-block; white-space:nowrap; }
+              .chat-tag.admin { color:white; font-weight:900; }
               .chat-input-row { display:flex; gap:8px; margin-top:8px; }
               .chat-input { flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02); color: white; outline: none; }
               .chat-send-btn { padding: 8px 12px; border-radius: 8px; border: none; background: linear-gradient(90deg,#22d3ee,#3b82f6); color: white; font-weight: 700; cursor: pointer; }
@@ -190,6 +192,14 @@
                   border-width: 6px 6px 0 6px;
                   border-style: solid;
                   border-color: rgba(255,255,255,0.92) transparent transparent transparent;
+              }
+
+              /* Small colored bar shown under character username (no text) */
+              .name-tag-bar {
+                  width: 44px;
+                  height: 8px;
+                  border-radius: 8px;
+                  box-shadow: 0 6px 20px rgba(0,0,0,0.45);
               }
 
     </style>
@@ -252,6 +262,10 @@
           const CHAT_MAX = 10;
           const BUBBLE_DURATION = 5000;
 
+          // Name tags state (mapping lower-username -> tag key). Stored locally for now.
+          const [nameTags, setNameTags] = useState({});
+          const NAME_TAG_STORAGE_KEY = 'movement_hub_name_tags';
+
           const characters = {
               aurababy: { name: 'Aurababy', image: 'https://i.ibb.co/nq467xv6/aurababy.png' },
               goonerbaby: { name: 'Goonerbaby', image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png' },
@@ -284,6 +298,15 @@
               'piss','dick','cock','pussy','hell','whore','slut','fag',
               'nigger','nigga','retard','cunt','twat'
           ];
+
+          // Tag definitions
+          const tagDefs = {
+              gold: { label: 'Supporter', color: '#FFD700', textColor: '#111' },
+              green: { label: 'Very VERY Early Supporter', color: '#00C851', textColor: '#061a09' },
+              red: { label: 'Opp', color: '#FF4D4D', textColor: '#111' },
+              purple: { label: 'Vip', color: '#8E44AD', textColor: '#fff' },
+              black: { label: 'Zesty Besty', color: '#111111', textColor: '#fff' }
+          };
 
           const containsBadWord = (text) => {
               const lowerText = text.toLowerCase();
@@ -448,9 +471,46 @@
               if (stored) {
                   setUsername(stored);
               }
+              // load name tags from localStorage
+              try {
+                  const raw = localStorage.getItem(NAME_TAG_STORAGE_KEY);
+                  if (raw) {
+                      setNameTags(JSON.parse(raw));
+                  }
+              } catch (err) {
+                  console.warn('failed to parse saved name tags', err);
+              }
           }, []);
 
-          // Listen for moderation lists (bans/timeouts) globally for admin panel usage
+          // persist nameTags to localStorage when changed
+          useEffect(() => {
+              try {
+                  localStorage.setItem(NAME_TAG_STORAGE_KEY, JSON.stringify(nameTags));
+              } catch (err) {
+                  console.warn('failed to save name tags', err);
+              }
+          }, [nameTags]);
+
+          // helper to assign/remove tags (admin only)
+          const assignTag = (targetUsername, tagKey) => {
+              if (!username) return alert('Sign in as admin to assign tags.');
+              if (!adminNames.includes((username || '').toLowerCase())) return alert('Only admins can assign tags.');
+              const lower = (targetUsername || '').toLowerCase();
+              setNameTags(prev => {
+                  const next = { ...prev };
+                  if (!tagKey || tagKey === 'none') {
+                      delete next[lower];
+                      showAnnouncement(`${targetUsername} tag removed by ${username}`, 'info');
+                  } else {
+                      next[lower] = tagKey;
+                      showAnnouncement(`${targetUsername} was given the ${tagKey} tag by ${username}`, 'info');
+                  }
+                  return next;
+              });
+          };
+
+          const removeTag = (targetUsername) => assignTag(targetUsername, 'none');
+
           useEffect(() => {
               const bansRef = ref(db, 'moderation/bans');
               const timeoutsRef = ref(db, 'moderation/timeouts');
@@ -539,6 +599,11 @@
               if (!username) return;
 
               const handleKeyDown = (e) => {
+                  // If the user is typing into an input/textarea/contenteditable (chat or forms), don't capture movement keys
+                  const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : null;
+                  const isEditable = tag === 'input' || tag === 'textarea' || e.target && e.target.isContentEditable;
+                  if (isEditable) return;
+
                   // If moderated and still active, block movement keys
                   const key = e.key.toLowerCase();
                   if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) {
@@ -551,6 +616,10 @@
                   }
               };
               const handleKeyUp = (e) => {
+                  const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : null;
+                  const isEditable = tag === 'input' || tag === 'textarea' || e.target && e.target.isContentEditable;
+                  if (isEditable) return;
+
                   const key = e.key.toLowerCase();
                   keysPressed.current[key] = false;
               };
@@ -746,6 +815,33 @@
               return `${days}d`;
           };
 
+          // helper to render tag badge style for chat
+          const renderChatTag = (u) => {
+              const lower = (u || '').toLowerCase();
+              // admin rainbow badge
+              if (adminNames.includes(lower)) {
+                  return React.createElement('span', { className: 'chat-tag admin', style: { background: 'linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff)', color: '#fff', fontWeight: 900 } }, 'ADMIN');
+              }
+              const t = nameTags[lower];
+              if (!t) return null;
+              const def = tagDefs[t];
+              if (!def) return null;
+              return React.createElement('span', { className: 'chat-tag', style: { background: def.color, color: def.textColor } }, def.label);
+          };
+
+          // helper to render below-character colored bar (no text)
+          const renderNameTagBar = (u, isAdminFlag) => {
+              const lower = (u || '').toLowerCase();
+              if (isAdminFlag) {
+                  return React.createElement('div', { className: 'name-tag-bar', style: { background: 'linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff)' } });
+              }
+              const t = nameTags[lower];
+              if (!t) return null;
+              const def = tagDefs[t];
+              if (!def) return null;
+              return React.createElement('div', { className: 'name-tag-bar', style: { background: def.color } });
+          };
+
           return React.createElement('div', { className: 'screen' },
               React.createElement('div', { className: 'grid-bg' }),
 
@@ -768,10 +864,15 @@
                               onError: (e) => { e.target.src = characters['aurababy'].image; }
                           })
                       ),
+
+                      // username label (with optional colored tag bar under the name)
                       React.createElement('div', {
                           className: 'username-label' + (p.admin ? ' admin' : ''),
                           style: { left: `${p.x + 24}px`, top: `${p.y + 58}px` }
-                      }, p.username),
+                      },
+                          React.createElement('span', null, p.username),
+                          renderNameTagBar(p.username, p.admin)
+                      ),
 
                       // If this is the local player's rendering and we have a self bubble, show it above character
                       (id === playerId.current && selfBubble) ? React.createElement('div', {
@@ -795,7 +896,10 @@
                       // show most recent messages on top (we display reversed order in css)
                       chatMessages.slice().reverse().map(m =>
                           React.createElement('div', { key: m.id, className: 'chat-message' },
-                              React.createElement('div', { className: 'chat-meta' }, m.username),
+                              React.createElement('div', { className: 'chat-meta' },
+                                  React.createElement('div', null, m.username),
+                                  renderChatTag(m.username)
+                              ),
                               React.createElement('div', null, m.text)
                           )
                       )
@@ -865,7 +969,24 @@
                                           moderation.timeouts[u.toLowerCase()] && React.createElement('div', { className: 'muted' }, '• timed out')
                                       ),
                                       React.createElement('div', null,
-                                          React.createElement('button', { className: 'small-btn ghost', onClick: () => {
+                                          // tag selector (assign/remove) - only admins can do this (we are in admin modal)
+                                          React.createElement('select', {
+                                              defaultValue: nameTags[u.toLowerCase()] || 'none',
+                                              onChange: (e) => {
+                                                  const v = e.target.value;
+                                                  assignTag(u, v === 'none' ? 'none' : v);
+                                              },
+                                              style: { padding: '6px 8px', borderRadius: 6, marginRight: 6 }
+                                          },
+                                              React.createElement('option', { value: 'none' }, 'No Tag'),
+                                              React.createElement('option', { value: 'gold' }, 'Gold (Supporter)'),
+                                              React.createElement('option', { value: 'green' }, 'Green (Very VERY Early Supporter)'),
+                                              React.createElement('option', { value: 'red' }, 'Red (Opp)'),
+                                              React.createElement('option', { value: 'purple' }, 'Purple (Vip)'),
+                                              React.createElement('option', { value: 'black' }, 'Black (Zesty Besty)')
+                                          ),
+
+                                          React.createElement('button', { className: 'small-btn ghost', style: { marginLeft: 6 }, onClick: () => {
                                               const choice = window.prompt('Ban duration: (10s,1m,10m,1h,1d,perm)', '10s');
                                               if (choice) applyModeration(u, 'ban', choice);
                                           } }, 'Ban'),
