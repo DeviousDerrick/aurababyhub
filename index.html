@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -97,7 +98,6 @@
                   100% { transform: scale(1); opacity: 0.2; filter: hue-rotate(0deg); }
               }
               .mod-perm { color: #ff7b7b; font-weight: 700; margin-bottom: 10px; }
-
               .top-announcement {
                   position: fixed;
                   top: 18px;
@@ -123,7 +123,6 @@
                   from { transform: translateX(-50%) translateY(-6px); opacity: 0; }
                   to { transform: translateX(-50%) translateY(0); opacity: 1; }
               }
-
               .orb-container {
                   position: fixed;
                   left: 50%;
@@ -175,7 +174,6 @@
               }
               .orb-leaderboard h4 { margin-bottom: 6px; color:#ffd54a; font-weight:900; }
               .orb-row { display:flex; justify-content:space-between; gap:6px; font-weight:800; color:#fff; margin:2px 0; }
-
               .chat-box {
                   position: fixed;
                   right: 18px;
@@ -206,7 +204,6 @@
               .chat-recipient { padding:6px 8px; border-radius:6px; background: rgba(255,255,255,0.03); color:#cbd5e1; border:1px solid rgba(255,255,255,0.03); font-weight:800; font-size:13px; }
               .delete-msg-btn { position:absolute; top:4px; right:4px; padding:2px 6px; font-size:11px; background:rgba(255,0,0,0.4); border:none; border-radius:4px; color:white; cursor:pointer; }
               .delete-msg-btn:hover { background:rgba(255,0,0,0.6); }
-
               .speech-bubble {
                   position: absolute;
                   pointer-events: none;
@@ -232,35 +229,42 @@
                   border-style: solid;
                   border-color: rgba(255,255,255,0.92) transparent transparent transparent;
               }
-
               .name-tag-bar {
                   width: 44px;
                   height: 8px;
                   border-radius: 8px;
                   box-shadow: 0 6px 20px rgba(0,0,0,0.45);
               }
-
               .friend-list { display:flex; flex-direction:column; gap:8px; }
               .friend-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center; }
               .friend-name { font-weight: 700; }
               .friend-actions { display:flex; gap:6px; flex-wrap:wrap; }
-              
+             
               .mail-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 8px; }
               .mail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
               .mail-from { font-weight: 700; color: #22d3ee; }
               .mail-time { font-size: 11px; color: #9ca3af; }
               .mail-body { font-size: 13px; color: #e5e7eb; }
-              
+             
               .group-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor:pointer; }
               .group-item:hover { background: rgba(255,255,255,0.06); }
               .group-name { font-weight: 700; color: #22d3ee; margin-bottom:4px; }
               .group-members { font-size: 11px; color: #9ca3af; }
-
+                    /* Player Profile Styles */
+      .player { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+      .player:hover { transform: scale(1.12); box-shadow: 0 0 30px rgba(34,211,238,0.9); z-index: 10; }
+      .profile-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
+      .profile-button:hover { transform: scale(1.03); }
+      .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid #22d3ee; margin: 20px auto; box-shadow: 0 0 30px rgba(34,211,238,0.6); }
+      .profile-character { width: 120px; height: 120px; object-fit: contain; margin: 16px auto; border-radius: 12px; background: rgba(255,255,255,0.05); padding: 8px; }
+      .profile-info { margin: 12px 0; font-size: 18px; }
+      .profile-info strong { color: #22d3ee; }
+      .profile-image-input { width: 100%; padding: 12px; margin: 20px 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-size: 14px; }
+      .profile-image-input::placeholder { color: #9ca3af; }
     </style>
   </head>
   <body>
     <div id="root"></div>
-
     <script type="module">
       import React from 'https://cdn.skypack.dev/react@18.2.0';
       import ReactDOM from 'https://cdn.skypack.dev/react-dom@18.2.0';
@@ -268,7 +272,6 @@
       import {
         getDatabase, ref, set, onValue, onDisconnect, get, remove, update, runTransaction, push
       } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
       const firebaseConfig = {
           apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
           authDomain: "s0lace-web.firebaseapp.com",
@@ -278,12 +281,9 @@
           messagingSenderId: "13647464646",
           appId: "1:13647464646:web:87ecb82a32ab6f0efaafc7"
       };
-
       const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
-
       const { useState, useEffect, useRef } = React;
-
       function MovementHub() {
           const [username, setUsername] = useState(null);
           const [inputUsername, setInputUsername] = useState('');
@@ -303,38 +303,32 @@
           const [mailbox, setMailbox] = useState([]);
           const [friendGroups, setFriendGroups] = useState([]);
           const [chatChannel, setChatChannel] = useState('all');
-
           const [announcement, setAnnouncement] = useState(null);
           const announceTimeoutRef = useRef(null);
-
           const [selfModeration, setSelfModeration] = useState(null);
           const [countdown, setCountdown] = useState(null);
-
+          const [showProfileModal, setShowProfileModal] = useState(false);
+          const [profileTarget, setProfileTarget] = useState(null); // null = my profile, else playerId
           const playerId = useRef(crypto.randomUUID());
           const renderRef = useRef({});
           const keysPressed = useRef({});
           const animationFrame = useRef(null);
-
           const SPEED = 4;
-
           const [chatMessages, setChatMessages] = useState([]);
           const [chatInput, setChatInput] = useState('');
           const CHAT_MAX = 50;
           const CHAT_COOLDOWN_MS = 5000;
           const BUBBLE_DURATION = 5000;
-
           const [nameTags, setNameTags] = useState({});
           const [bubbles, setBubbles] = useState({});
           const bubbleTimeouts = useRef({});
-
           const [orbCount, setOrbCount] = useState(0);
           const [orbLeaderboard, setOrbLeaderboard] = useState([]);
-          
+         
           const orbClickHistory = useRef([]);
           const ORB_RATE_LIMIT = 100;
           const ORB_RATE_WINDOW = 2000;
           const ORB_BAN_DURATION = 4 * 60 * 60 * 1000;
-
           const characters = {
               aurababy: { name: 'Aurababy', image: 'https://i.ibb.co/nq467xv6/aurababy.png' },
               goonerbaby: { name: 'Goonerbaby', image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png' },
@@ -351,35 +345,30 @@
               baby_that_holds_aura: { name: 'The Baby That Holds Aura', image: 'https://i.ibb.co/jmTHJfh/The-Baby-That-Holds-Aura.jpg' },
               gangsta_baby: { name: 'Gangsta Baby', image: 'https://i.ibb.co/m5hpwbnt/gangstababy.jpg' }
           };
-
           const MOD_FLASH_IMAGE = 'https://i.ibb.co/Kxp9Vhz7/judgment.jpg';
           const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
           const ADMIN_PASSWORD = 'chickenfishfarting';
-
           const badWords = [
               'fuck','shit','damn','bitch','ass','asshole','bastard','crap',
               'piss','dick','cock','pussy','hell','whore','slut','fag',
               'nigger','nigga','retard','cunt','twat'
           ];
-
           const tagDefs = {
               gold: { label: 'Supporter', color: '#FFD700', textColor: '#111' },
-              green: { label: 'Very VERY Early Supporter', color: '#00C851', textColor: '#061a09' },
+              green: { label: 'VERY Early Supporter', color: '#00C851', textColor: '#061a09' },
               red: { label: 'Opp', color: '#FF4D4D', textColor: '#111' },
               purple: { label: 'Vip', color: '#8E44AD', textColor: '#fff' },
               black: { label: 'Zesty Besty', color: '#111111', textColor: '#fff' },
               friend: { label: 'Friend', color: '#10B981', textColor: '#fff' },
               timedout: { label: 'Timed Out', color: '#FFA500', textColor: '#111' }
           };
-
           const containsBadWord = (text) => {
               const lowerText = (text || '').toLowerCase();
               return badWords.some(word => lowerText.includes(word));
           };
-
           const durationMs = (label) => {
               if (!label || label === 'perm') return null;
-              
+             
               let total = 0;
               const parts = label.split('-');
               for (const part of parts) {
@@ -387,7 +376,7 @@
                   if (!match) continue;
                   const value = parseInt(match[1]);
                   const unit = match[2];
-                  
+                 
                   switch (unit) {
                       case 's': total += value * 1000; break;
                       case 'm': total += value * 60 * 1000; break;
@@ -397,7 +386,6 @@
               }
               return total > 0 ? total : null;
           };
-
           const showAnnouncement = (text, type = 'info') => {
               setAnnouncement({ text, type });
               if (announceTimeoutRef.current) clearTimeout(announceTimeoutRef.current);
@@ -406,7 +394,6 @@
                   announceTimeoutRef.current = null;
               }, 7000);
           };
-
           const validateAndFetchModerationEntry = async (path, key) => {
               const nodeRef = ref(db, `${path}/${key}`);
               const snap = await get(nodeRef);
@@ -418,7 +405,6 @@
               }
               return data;
           };
-
           const removePlayerByUsername = async (target) => {
               const lowerTarget = target.toLowerCase();
               for (const [id, p] of Object.entries(players || {})) {
@@ -427,12 +413,10 @@
                   }
               }
           };
-
           const applyModeration = async (targetUsername, type, durationLabel, reason = '') => {
               if (!username) return alert('You are not signed in as admin.');
               const isAdmin = adminNames.includes((username || '').toLowerCase());
               if (!isAdmin) return alert('Only admins can perform this action.');
-
               const key = targetUsername.toLowerCase();
               const ms = durationMs(durationLabel);
               const now = Date.now();
@@ -443,7 +427,6 @@
                   expiresAt: ms == null ? null : now + ms,
                   reason: reason || 'No reason provided'
               };
-
               if (type === 'ban') {
                   await set(ref(db, `moderation/bans/${key}`), payload);
                   await removePlayerByUsername(targetUsername);
@@ -453,7 +436,6 @@
                   showAnnouncement(`${targetUsername} was TIMED OUT by ${username}${reason ? ': ' + reason : ''}`, 'timeout');
               }
           };
-
           const removeModeration = async (targetUsername, type) => {
               const key = targetUsername.toLowerCase();
               if (type === 'ban') {
@@ -464,7 +446,6 @@
                   showAnnouncement(`${targetUsername} timeout was REMOVED by ${username}`, 'info');
               }
           };
-
           const deleteMessage = async (msgId) => {
               try {
                   await remove(ref(db, `chat/channels/${chatChannel}/messages/${msgId}`));
@@ -472,67 +453,61 @@
                   console.error('Failed to delete message', err);
               }
           };
-
           const sendFriendRequest = async (targetUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const targetLower = targetUsername.toLowerCase();
-              
+             
               if (lower === targetLower) return alert('Cannot add yourself as friend');
               if (friends.includes(targetLower)) return alert('Already friends');
-              
+             
               await set(ref(db, `friends/${targetLower}/requests/${lower}`), {
                   from: username,
                   ts: Date.now()
               });
               showAnnouncement(`Friend request sent to ${targetUsername}`, 'info');
           };
-
           const acceptFriendRequest = async (requesterUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const requesterLower = requesterUsername.toLowerCase();
-              
+             
               await set(ref(db, `friends/${lower}/friendsList/${requesterLower}`), true);
               await set(ref(db, `friends/${requesterLower}/friendsList/${lower}`), true);
               await remove(ref(db, `friends/${lower}/requests/${requesterLower}`));
-              
+             
               showAnnouncement(`You are now friends with ${requesterUsername}`, 'info');
           };
-
           const removeFriend = async (friendUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const friendLower = friendUsername.toLowerCase();
-              
+             
               await remove(ref(db, `friends/${lower}/friendsList/${friendLower}`));
               await remove(ref(db, `friends/${friendLower}/friendsList/${lower}`));
-              
+             
               showAnnouncement(`Removed ${friendUsername} from friends`, 'info');
           };
-
           const blockUser = async (targetUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const targetLower = targetUsername.toLowerCase();
-              
+             
               await set(ref(db, `blocked/${lower}/${targetLower}`), true);
               showAnnouncement(`Blocked ${targetUsername}`, 'info');
           };
-
           const unblockUser = async (targetUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const targetLower = targetUsername.toLowerCase();
-              
+             
               await remove(ref(db, `blocked/${lower}/${targetLower}`));
               showAnnouncement(`Unblocked ${targetUsername}`, 'info');
           };
-
           const sendMailToFriend = async (friendUsername, message) => {
               if (!username) return;
               if (!message.trim()) return alert('Message cannot be empty');
-              
+             
               const friendLower = friendUsername.toLowerCase();
               const mailRef = push(ref(db, `friends/${friendLower}/mailbox`));
               await set(mailRef, {
@@ -540,24 +515,22 @@
                   text: message,
                   ts: Date.now()
               });
-              
+             
               showAnnouncement(`Mail sent to ${friendUsername}`, 'info');
           };
-
           const deleteMail = async (mailId) => {
               if (!username) return;
               const lower = username.toLowerCase();
               await remove(ref(db, `friends/${lower}/mailbox/${mailId}`));
           };
-
           const createFriendGroup = async (groupName, members) => {
               if (!username) return;
               if (!groupName.trim()) return alert('Group name cannot be empty');
               if (members.length < 2) return alert('Need at least 2 members');
-              
+             
               const lower = username.toLowerCase();
               const membersList = [lower, ...members.map(m => m.toLowerCase())];
-              
+             
               const groupRef = push(ref(db, 'friendGroups'));
               await set(groupRef, {
                   name: groupName,
@@ -565,16 +538,13 @@
                   members: membersList,
                   ts: Date.now()
               });
-              
+             
               showAnnouncement(`Created group: ${groupName}`, 'info');
           };
-
           const handleUsernameSubmit = async (e) => {
               if (e && e.preventDefault) e.preventDefault();
               setError('');
-
               const trimmedUsername = inputUsername.trim();
-
               if (trimmedUsername.length < 3) {
                   setError('Username must be at least 3 characters');
                   return;
@@ -591,7 +561,6 @@
                   setError('Username contains inappropriate language');
                   return;
               }
-
               const lower = trimmedUsername.toLowerCase();
               if (adminNames.includes(lower)) {
                   const pw = window.prompt('Enter admin password for ' + trimmedUsername + ':', '');
@@ -600,7 +569,6 @@
                       return;
                   }
               }
-
               try {
                   const ban = await validateAndFetchModerationEntry('moderation/bans', lower);
                   if (ban) {
@@ -616,20 +584,16 @@
               } catch (err) {
                   console.error('Moderation check error', err);
               }
-
               localStorage.setItem('movement_hub_username', trimmedUsername);
               setUsername(trimmedUsername);
           };
-
           useEffect(() => {
               const stored = localStorage.getItem('movement_hub_username');
               if (stored) setUsername(stored);
           }, []);
-
           useEffect(() => {
               const bansRef = ref(db, 'moderation/bans');
               const timeoutsRef = ref(db, 'moderation/timeouts');
-
               onValue(bansRef, snapshot => {
                   const val = snapshot.val() || {};
                   const next = {};
@@ -640,7 +604,6 @@
                   }
                   setModeration(prev => ({ ...prev, bans: next }));
               });
-
               onValue(timeoutsRef, snapshot => {
                   const val = snapshot.val() || {};
                   const next = {};
@@ -652,12 +615,10 @@
                   setModeration(prev => ({ ...prev, timeouts: next }));
               });
           }, []);
-
           useEffect(() => {
               if (!username) return;
               const lower = username.toLowerCase();
               const banRef = ref(db, `moderation/bans/${lower}`);
-
               onValue(banRef, snapshot => {
                   const val = snapshot.val();
                   if (val) {
@@ -668,7 +629,6 @@
                   }
               });
           }, [username]);
-
           useEffect(() => {
               if (!selfModeration) {
                   setCountdown(null);
@@ -691,15 +651,12 @@
               const id = setInterval(update, 1000);
               return () => clearInterval(id);
           }, [selfModeration]);
-
           useEffect(() => {
               if (!username) return;
-
               const handleKeyDown = (e) => {
                   const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : null;
                   const isEditable = tag === 'input' || tag === 'textarea' || e.target && e.target.isContentEditable;
                   if (isEditable) return;
-
                   const key = e.key.toLowerCase();
                   if (['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'].includes(key)) {
                       if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
@@ -710,56 +667,47 @@
                       keysPressed.current[key] = true;
                   }
               };
-              
+             
               const handleKeyUp = (e) => {
                   const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : null;
                   const isEditable = tag === 'input' || tag === 'textarea' || e.target && e.target.isContentEditable;
                   if (isEditable) return;
-
                   const key = e.key.toLowerCase();
                   keysPressed.current[key] = false;
               };
-
               const updatePosition = () => {
                   if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
                       animationFrame.current = requestAnimationFrame(updatePosition);
                       return;
                   }
-
                   setPosition(prev => {
                       let moveX = 0, moveY = 0;
                       if (keysPressed.current['w'] || keysPressed.current['arrowup']) moveY -= 1;
                       if (keysPressed.current['s'] || keysPressed.current['arrowdown']) moveY += 1;
                       if (keysPressed.current['a'] || keysPressed.current['arrowleft']) moveX -= 1;
                       if (keysPressed.current['d'] || keysPressed.current['arrowright']) moveX += 1;
-
                       if (moveX !== 0 && moveY !== 0) {
                           const len = Math.sqrt(moveX*moveX + moveY*moveY);
                           moveX = (moveX / len) * SPEED;
                           moveY = (moveY / len) * SPEED;
                       } else { moveX *= SPEED; moveY *= SPEED; }
-
                       let newX = prev.x + moveX;
                       let newY = prev.y + moveY;
                       newX = Math.max(0, Math.min(window.innerWidth - 50, newX));
                       newY = Math.max(0, Math.min(window.innerHeight - 50, newY));
                       return { x: newX, y: newY };
                   });
-
                   animationFrame.current = requestAnimationFrame(updatePosition);
               };
-
               window.addEventListener('keydown', handleKeyDown);
               window.addEventListener('keyup', handleKeyUp);
               animationFrame.current = requestAnimationFrame(updatePosition);
-
               return () => {
                   window.removeEventListener('keydown', handleKeyDown);
                   window.removeEventListener('keyup', handleKeyUp);
                   if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
               };
           }, [username, selfModeration]);
-
           useEffect(() => {
               if (!username) return;
               if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
@@ -776,7 +724,6 @@
               });
               onDisconnect(playerRef).remove();
           }, [username, selfModeration]);
-
           useEffect(() => {
               if (!username) return;
               const playerRef = ref(db, `players/${playerId.current}`);
@@ -795,14 +742,43 @@
               }, 66);
               return () => clearInterval(interval);
           }, [username, position.x, position.y, selectedCharacter, selfModeration]);
-
           useEffect(() => {
               const playersRef = ref(db, 'players');
               return onValue(playersRef, snapshot => {
                   setPlayers(snapshot.val() || {});
               });
           }, []);
-
+          // Profile tracking: time spent + aura + character + join date
+          useEffect(() => {
+              if (!username) return;
+              const profileRef = ref(db, `profiles/${username.toLowerCase()}`);
+              // Initialize or update profile
+              const initProfile = async () => {
+                  const snap = await get(profileRef);
+                  if (!snap.exists()) {
+                      set(profileRef, {
+                          joinDate: Date.now(),
+                          timeSpent: 0,
+                          auraClicks: 0,
+                          character: selectedCharacter,
+                          profileImage: ''
+                      });
+                  }
+              };
+              initProfile();
+              // Update time every minute
+              const timer = setInterval(() => {
+                  runTransaction(profileRef, (profile) => {
+                      if (profile) {
+                          profile.timeSpent = (profile.timeSpent || 0) + 60;
+                          profile.character = selectedCharacter;
+                      }
+                      return profile;
+                  });
+              }, 60000);
+              // Update aura clicks when orb is clicked (connect to your existing orb click handler later)
+              return () => clearInterval(timer);
+          }, [username, selectedCharacter]);
           useEffect(() => {
               const next = {};
               for (const [id, p] of Object.entries(players || {})) {
@@ -821,36 +797,30 @@
               }
               renderRef.current = next;
           }, [players, position, username, selectedCharacter]);
-
           useEffect(() => {
               if (!username) return;
               const lower = username.toLowerCase();
-
               const friendsRef = ref(db, `friends/${lower}/friendsList`);
               onValue(friendsRef, snapshot => {
                   const val = snapshot.val() || {};
                   setFriends(Object.keys(val));
               });
-
               const requestsRef = ref(db, `friends/${lower}/requests`);
               onValue(requestsRef, snapshot => {
                   const val = snapshot.val() || {};
                   setFriendRequests(Object.keys(val));
               });
-
               const blockedRef = ref(db, `blocked/${lower}`);
               onValue(blockedRef, snapshot => {
                   const val = snapshot.val() || {};
                   setBlockedUsers(Object.keys(val));
               });
-
               const mailRef = ref(db, `friends/${lower}/mailbox`);
               onValue(mailRef, snapshot => {
                   const val = snapshot.val() || {};
                   const arr = Object.entries(val).map(([k,v]) => ({ id: k, ...v })).sort((a,b) => (b.ts||0) - (a.ts||0));
                   setMailbox(arr);
               });
-
               const groupsRef = ref(db, 'friendGroups');
               onValue(groupsRef, snapshot => {
                   const val = snapshot.val() || {};
@@ -859,17 +829,14 @@
                       .map(([id, g]) => ({ id, ...g }));
                   setFriendGroups(myGroups);
               });
-
               const tagsRef = ref(db, 'nameTags');
               onValue(tagsRef, snapshot => {
                   setNameTags(snapshot.val() || {});
               });
-
               const orbCountRef = ref(db, 'orb/count');
               onValue(orbCountRef, snapshot => {
                   setOrbCount(snapshot.val() || 0);
               });
-
               const orbClicksRef = ref(db, 'orb/clicks');
               onValue(orbClicksRef, snapshot => {
                   const val = snapshot.val() || {};
@@ -877,23 +844,23 @@
                   setOrbLeaderboard(arr.slice(0,5));
               });
           }, [username]);
-
           useEffect(() => {
               if (!username) return;
-              
+             
+             
+             
               const msgsRef = ref(db, `chat/channels/${chatChannel}/messages`);
               onValue(msgsRef, snapshot => {
                   const val = snapshot.val() || {};
                   const arr = Object.entries(val).map(([k,v]) => ({ id: k, ...v })).sort((a,b) => (a.ts||0) - (b.ts||0));
-                  
+                 
                   const filtered = arr.filter(m => {
                       const senderLower = (m.username || '').toLowerCase();
                       if (blockedUsers.includes(senderLower)) return false;
                       return true;
                   }).slice(-CHAT_MAX);
-                  
+                 
                   setChatMessages(filtered);
-
                   const now = Date.now();
                   arr.forEach(m => {
                       if (blockedUsers.includes((m.username || '').toLowerCase())) return;
@@ -921,7 +888,6 @@
                   });
               });
           }, [username, chatChannel, blockedUsers]);
-
           const assignTag = async (targetUsername, tagKey) => {
               if (!username) return alert('Sign in as admin to assign tags.');
               if (!adminNames.includes((username || '').toLowerCase())) return alert('Only admins can assign tags.');
@@ -935,36 +901,33 @@
                   showAnnouncement(`${targetUsername} was given the ${tagKey} tag by ${username}`, 'info');
               }
           };
-
           const handleChatChange = (e) => {
               let v = e.target.value || '';
               v = v.toLowerCase();
               v = v.replace(/[^a-z ]/g, '');
               setChatInput(v);
           };
-
           const handleChatSend = async (e) => {
               if (e && e.preventDefault) e.preventDefault();
               if (!username) return;
-              
+             
               const lower = username.toLowerCase();
               const timeoutEntry = moderation.timeouts[lower];
               if (timeoutEntry && (!timeoutEntry.expiresAt || Date.now() < timeoutEntry.expiresAt)) {
                   return alert('You are timed out and cannot chat.');
               }
-              
+             
               let text = (chatInput || '').trim();
               if (!text) return;
-              
+             
               if (text === '/clear') {
                   setChatMessages([]);
                   setChatInput('');
                   return;
               }
-              
+             
               if (text.length > 200) return alert('Message too long (200 chars max)');
               if (containsBadWord(text)) return alert('Message contains inappropriate language');
-
               try {
                   const lastRef = ref(db, `chat/lastChat/${lower}`);
                   const lastSnap = await get(lastRef);
@@ -974,7 +937,6 @@
                       const rem = Math.ceil((CHAT_COOLDOWN_MS - (now - last)) / 1000);
                       return alert(`Please wait ${rem}s before sending another message.`);
                   }
-
                   const id = crypto.randomUUID();
                   const msg = {
                       username,
@@ -982,63 +944,112 @@
                       ts: now,
                       playerId: playerId.current
                   };
-
                   await set(ref(db, `chat/channels/${chatChannel}/messages/${id}`), msg);
                   await set(lastRef, now);
-
               } catch (err) {
                   console.error('failed to send message', err);
                   alert('Failed to send — try again.');
               }
-
               setChatInput('');
           };
-
           const onChatKeyDown = (e) => {
               if (e.key === 'Enter') {
                   e.preventDefault();
                   handleChatSend();
               }
           };
-
           const handleOrbClick = async () => {
               if (!username) {
                   showAnnouncement('Sign in to click the orb', 'info');
                   return;
               }
+              const lower = username.toLowerCase();
+              const userProfileRef = ref(db, `profiles/${lower}`);
+              runTransaction(userProfileRef, (profile) => {
+                  if (profile) profile.auraClicks = (profile.auraClicks || 0) + 1;
+                  return profile;
+              });
               if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
                   return showAnnouncement('You are moderated and cannot click the orb', 'info');
               }
-              
+             
               const now = Date.now();
               orbClickHistory.current.push(now);
               orbClickHistory.current = orbClickHistory.current.filter(t => now - t < ORB_RATE_WINDOW);
-              
+             
               if (orbClickHistory.current.length > ORB_RATE_LIMIT) {
                   const lower = username.toLowerCase();
                   await applyModeration(username, 'ban', '4h', 'Clicking orb too fast (auto-ban)');
                   return;
               }
-              
+             
               try {
                   const countRef = ref(db, 'orb/count');
                   await runTransaction(countRef, (current) => {
                       return (current || 0) + 1;
                   });
-
                   const lower = username.toLowerCase();
                   const userClickRef = ref(db, `orb/clicks/${lower}`);
                   await runTransaction(userClickRef, (current) => {
                       return (current || 0) + 1;
                   });
-
                   showAnnouncement(`+1 Aura!`, 'info');
-
               } catch (err) {
                   console.error('orb click failed', err);
               }
           };
-
+          function ProfileModal({ profileTarget, username, selectedCharacter, players, onClose }) {
+              const [profileData, setProfileData] = useState({});
+              const targetUsername = profileTarget ? players[profileTarget]?.username : username;
+              const isOwnProfile = targetUsername.toLowerCase() === username.toLowerCase();
+              useEffect(() => {
+                  if (!targetUsername) return;
+                  const profRef = ref(db, `profiles/${targetUsername.toLowerCase()}`);
+                  const unsub = onValue(profRef, (snap) => {
+                      setProfileData(snap.val() || {});
+                  });
+                  return unsub;
+              }, [targetUsername]);
+              const formatTime = (sec) => {
+                  if (!sec) return '0m';
+                  const h = Math.floor(sec / 3600);
+                  const m = Math.floor((sec % 3600) / 60);
+                  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+              };
+              const formatDate = (ts) => new Date(ts).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+              return React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
+                  React.createElement('div', { className: 'modal-title' },
+                      isOwnProfile ? 'My Profile' : (targetUsername + "'s Profile")
+                  ),
+                  React.createElement('img', {
+                      src: profileData.profileImage || characters[profileData.character || selectedCharacter]?.image || characters['aurababy'].image,
+                      className: 'profile-pic',
+                      alt: 'Profile Picture'
+                  }),
+                  React.createElement('img', {
+                      src: characters[profileData.character || selectedCharacter]?.image,
+                      className: 'profile-character',
+                      alt: 'Current Baby'
+                  }),
+                  React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Username: '), targetUsername),
+                  React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Member Since: '), profileData.joinDate ? formatDate(profileData.joinDate) : 'Today'),
+                  React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Time on AuraBabyHub: '), formatTime(profileData.timeSpent || 0)),
+                  React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Aura Contributed: '), profileData.auraClicks || 0),
+                  isOwnProfile && React.createElement('input', {
+                      type: 'text',
+                      className: 'profile-image-input',
+                      placeholder: 'Paste image URL & press Enter to set profile picture',
+                      onKeyDown: (e) => {
+                          if (e.key === 'Enter') {
+                              const url = e.target.value.trim();
+                              update(ref(db, `profiles/${username.toLowerCase()}`), { profileImage: url || null });
+                              e.target.value = '';
+                          }
+                      }
+                  }),
+                  React.createElement('button', { className: 'close-modal', onClick: onClose }, 'Close')
+              );
+          }
           if (!username) {
               return React.createElement('div', { className: 'screen center-container' },
                   React.createElement('div', { className: 'welcome-box' },
@@ -1060,13 +1071,11 @@
                   )
               );
           }
-
           const isAdminUser = adminNames.includes((username || '').toLowerCase());
           const uniquePlayerUsernames = [...new Set(Object.values(players || {}).map(p => p.username).filter(Boolean))];
-          
+         
           const isTimedOut = moderation.timeouts[(username || '').toLowerCase()];
           const timedOutRemaining = isTimedOut && isTimedOut.expiresAt ? Math.max(0, isTimedOut.expiresAt - Date.now()) : null;
-
           const formatRemaining = (ms) => {
               if (ms == null) return 'Permanent';
               if (ms <= 1000) return '0s';
@@ -1081,60 +1090,54 @@
               const days = Math.floor(hours / 24);
               return `${days}d`;
           };
-
           const renderChatTag = (u) => {
               const lower = (u || '').toLowerCase();
               if (adminNames.includes(lower)) {
                   return React.createElement('span', { className: 'chat-tag admin', style: { background: 'linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff)', color: '#fff', fontWeight: 900 } }, 'ADMIN');
               }
-              
+             
               if (moderation.timeouts[lower]) {
                   const def = tagDefs.timedout;
                   return React.createElement('span', { className: 'chat-tag', style: { background: def.color, color: def.textColor } }, def.label);
               }
-              
+             
               if (friends.includes(lower)) {
                   const def = tagDefs.friend;
                   return React.createElement('span', { className: 'chat-tag', style: { background: def.color, color: def.textColor } }, def.label);
               }
-              
+             
               const t = nameTags[lower];
               if (!t) return null;
               const def = tagDefs[t];
               if (!def) return null;
               return React.createElement('span', { className: 'chat-tag', style: { background: def.color, color: def.textColor } }, def.label);
           };
-
           const renderNameTagBar = (u, isAdminFlag) => {
               const lower = (u || '').toLowerCase();
               if (isAdminFlag) {
                   return React.createElement('div', { className: 'name-tag-bar', style: { background: 'linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff)' } });
               }
-              
+             
               if (moderation.timeouts[lower]) {
                   return React.createElement('div', { className: 'name-tag-bar', style: { background: tagDefs.timedout.color } });
               }
-              
+             
               if (friends.includes(lower)) {
                   return React.createElement('div', { className: 'name-tag-bar', style: { background: tagDefs.friend.color } });
               }
-              
+             
               const t = nameTags[lower];
               if (!t) return null;
               const def = tagDefs[t];
               if (!def) return null;
               return React.createElement('div', { className: 'name-tag-bar', style: { background: def.color } });
           };
-
           const hideOrb = showModal || showAdminModal || showFriendsModal || selfModeration;
-
           return React.createElement('div', { className: 'screen' },
               React.createElement('div', { className: 'grid-bg' }),
-
               announcement && React.createElement('div', {
                   className: `top-announcement ${announcement.type === 'ban' ? 'announce-ban' : announcement.type === 'timeout' ? 'announce-timeout' : ''}`
               }, announcement.text),
-
               !hideOrb && React.createElement(React.Fragment, null,
                   React.createElement('div', { className: 'orb-info' }, `Orbs Aura: ${orbCount}`),
                   React.createElement('div', { className: 'orb-leaderboard' },
@@ -1155,12 +1158,16 @@
                       })
                   )
               ),
-
               Object.entries(renderRef.current).map(([id, p]) =>
                   React.createElement(React.Fragment, { key: id },
                       React.createElement('div', {
+                          key: id,
                           className: 'player',
-                          style: { left: `${p.x}px`, top: `${p.y}px` }
+                          style: { left: `${p.x}px`, top: `${p.y}px` },
+                          onClick: () => {
+                              setProfileTarget(id);
+                              setShowProfileModal(true);
+                          }
                       },
                           React.createElement('img', {
                               src: characters[p.character]?.image || characters['aurababy'].image,
@@ -1169,7 +1176,6 @@
                               onError: (e) => { e.target.src = characters['aurababy'].image; }
                           })
                       ),
-
                       React.createElement('div', {
                           className: 'username-label' + (p.admin ? ' admin' : ''),
                           style: { left: `${p.x + 24}px`, top: `${p.y + 58}px` }
@@ -1177,21 +1183,25 @@
                           React.createElement('span', null, p.username),
                           renderNameTagBar(p.username, p.admin)
                       ),
-
                       bubbles[id] ? React.createElement('div', {
                           className: 'speech-bubble',
                           style: { left: `${p.x + 24}px`, top: `${p.y - 18}px` }
                       }, bubbles[id].text) : null
                   )
               ),
-
               React.createElement('div', { className: 'hud' },
                   React.createElement('button', { className: 'babies-button', onClick: () => setShowModal(true) }, '👶 Babies'),
                   React.createElement('button', { className: 'friends-button', onClick: () => setShowFriendsModal(true) }, '👥 Friends'),
+                  React.createElement('button', {
+                      className: 'profile-button',
+                      onClick: () => {
+                          setProfileTarget(null);
+                          setShowProfileModal(true);
+                      }
+                  }, '👤 My Profile'),
                   isAdminUser && React.createElement('button', { className: 'admin-button', onClick: () => setShowAdminModal(true) }, '🔧 Admin'),
                   React.createElement('div', { className: 'position' }, `(${Math.round(position.x)}, ${Math.round(position.y)})${isTimedOut ? ' - TIMED OUT' : ''}`)
               ),
-
               React.createElement('div', { className: 'chat-box' },
                   React.createElement('div', { className: 'chat-header' },
                       React.createElement('div', null, 'Chat'),
@@ -1208,7 +1218,7 @@
                   React.createElement('div', { className: 'chat-messages' },
                       chatMessages.slice().reverse().map(m =>
                           React.createElement('div', { key: m.id, className: 'chat-message' },
-                              isAdminUser && React.createElement('button', { 
+                              isAdminUser && React.createElement('button', {
                                   className: 'delete-msg-btn',
                                   onClick: () => deleteMessage(m.id)
                               }, '×'),
@@ -1233,11 +1243,10 @@
                       }),
                       React.createElement('button', { type: 'button', className: 'chat-send-btn', onClick: handleChatSend, disabled: !!isTimedOut }, 'Send')
                   ),
-                  React.createElement('div', { style: { marginTop: 6, fontSize: 11, color: '#9ca3af', textAlign:'center' } }, 
+                  React.createElement('div', { style: { marginTop: 6, fontSize: 11, color: '#9ca3af', textAlign:'center' } },
                       isTimedOut ? `Timed out: ${formatRemaining(timedOutRemaining)}` : `Cooldown: ${CHAT_COOLDOWN_MS/1000}s | Type /clear to clear`
                   )
               ),
-
               showModal && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowModal(false) },
                   React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
                       React.createElement('div', { className: 'modal-title' }, 'Choose Your Character'),
@@ -1266,7 +1275,6 @@
                       React.createElement('button', { className: 'close-modal', onClick: () => setShowModal(false) }, 'Close')
                   )
               ),
-
               showFriendsModal && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowFriendsModal(false) },
                   React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
                       React.createElement('div', { className: 'modal-title' }, 'Friends & Social'),
@@ -1277,7 +1285,6 @@
                           React.createElement('div', { className: `tab ${friendsTab === 'mailbox' ? 'active' : ''}`, onClick: () => setFriendsTab('mailbox') }, `Mailbox (${mailbox.length})`),
                           React.createElement('div', { className: `tab ${friendsTab === 'groups' ? 'active' : ''}`, onClick: () => setFriendsTab('groups') }, `Groups (${friendGroups.length})`)
                       ),
-
                       friendsTab === 'friends' && React.createElement('div', null,
                           React.createElement('div', { style: { marginBottom: 12 } },
                               React.createElement('button', { className: 'small-btn', onClick: () => {
@@ -1302,7 +1309,6 @@
                                   ))
                               )
                       ),
-
                       friendsTab === 'requests' && React.createElement('div', null,
                           friendRequests.length === 0 ? React.createElement('div', { className: 'muted' }, 'No pending requests') :
                               React.createElement('div', { className: 'friend-list' },
@@ -1317,7 +1323,6 @@
                                   ))
                               )
                       ),
-
                       friendsTab === 'blocked' && React.createElement('div', null,
                           React.createElement('div', { style: { marginBottom: 12 } },
                               React.createElement('button', { className: 'small-btn', onClick: () => {
@@ -1335,7 +1340,6 @@
                                   ))
                               )
                       ),
-
                       friendsTab === 'mailbox' && React.createElement('div', null,
                           mailbox.length === 0 ? React.createElement('div', { className: 'muted' }, 'No mail') :
                               mailbox.map(mail => React.createElement('div', { key: mail.id, className: 'mail-item' },
@@ -1346,7 +1350,6 @@
                                   React.createElement('div', { className: 'mail-body' }, mail.text)
                               ))
                       ),
-
                       friendsTab === 'groups' && React.createElement('div', null,
                           React.createElement('div', { style: { marginBottom: 12 } },
                               React.createElement('button', { className: 'small-btn', onClick: () => {
@@ -1364,11 +1367,9 @@
                                   React.createElement('div', { className: 'group-members' }, `Members: ${(g.members || []).join(', ')}`)
                               ))
                       ),
-
                       React.createElement('button', { className: 'close-modal', onClick: () => setShowFriendsModal(false) }, 'Close')
                   )
               ),
-
               showAdminModal && isAdminUser && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowAdminModal(false) },
                   React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
                       React.createElement('div', { className: 'modal-title' }, 'Admin Panel'),
@@ -1377,7 +1378,6 @@
                           React.createElement('div', { className: `tab ${adminTab === 'bans' ? 'active' : ''}`, onClick: () => setAdminTab('bans') }, `Bans (${Object.keys(moderation.bans || {}).length})`),
                           React.createElement('div', { className: `tab ${adminTab === 'timeouts' ? 'active' : ''}`, onClick: () => setAdminTab('timeouts') }, `Timeouts (${Object.keys(moderation.timeouts || {}).length})`)
                       ),
-
                       adminTab === 'players' && React.createElement('div', { className: 'admin-panel' },
                           React.createElement('div', { className: 'admin-column' },
                               React.createElement('div', { className: 'muted' }, `Active players (${uniquePlayerUsernames.length})`),
@@ -1404,7 +1404,6 @@
                                               React.createElement('option', { value: 'purple' }, 'Purple'),
                                               React.createElement('option', { value: 'black' }, 'Black')
                                           ),
-
                                           React.createElement('button', { className: 'small-btn ghost', onClick: () => {
                                               const dur = window.prompt('Ban duration (e.g., 11s, 8m, 2h, 2h-4m-10s, perm):', '11s');
                                               if (!dur) return;
@@ -1428,7 +1427,6 @@
                               )
                           )
                       ),
-
                       adminTab === 'bans' && React.createElement('div', { className: 'admin-panel' },
                           React.createElement('div', { className: 'admin-column' },
                               React.createElement('div', { className: 'muted' }, 'Banned users'),
@@ -1447,7 +1445,6 @@
                               )
                           )
                       ),
-
                       adminTab === 'timeouts' && React.createElement('div', { className: 'admin-panel' },
                           React.createElement('div', { className: 'admin-column' },
                               React.createElement('div', { className: 'muted' }, 'Timed out users'),
@@ -1466,11 +1463,18 @@
                               )
                           )
                       ),
-
                       React.createElement('button', { className: 'close-modal', onClick: () => setShowAdminModal(false) }, 'Close Admin Panel')
                   )
               ),
-
+              showProfileModal && React.createElement('div', { className: 'modal-overlay', onClick: () => setShowProfileModal(false) },
+                  React.createElement(ProfileModal, {
+                      profileTarget: profileTarget,
+                      username: username,
+                      selectedCharacter: selectedCharacter,
+                      players: players,
+                      onClose: () => setShowProfileModal(false)
+                  })
+              ),
               selfModeration && React.createElement('div', { className: 'mod-overlay' },
                   React.createElement('div', { className: 'mod-card' },
                       React.createElement('div', { className: 'mod-title' }, selfModeration.type === 'ban' ? 'Banned' : 'Error'),
@@ -1487,7 +1491,6 @@
               )
           );
       }
-
       ReactDOM.render(React.createElement(MovementHub), document.getElementById('root'));
     </script>
   </body>
