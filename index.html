@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -15,11 +14,12 @@
                 linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
                 background-size: 40px 40px, 40px 40px;
               }
-              .player { position: absolute; width: 48px; height: 48px; background: linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%); border-radius: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.6); transition: left 80ms linear, top 80ms linear; overflow: hidden; }
+              .player { position: absolute; width: 48px; height: 48px; background: linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%); border-radius: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.6); transition: left 80ms linear, top 80ms linear; overflow: hidden; cursor: pointer; }
+              .player:hover { transform: scale(1.12); box-shadow: 0 0 30px rgba(34,211,238,0.9); z-index: 10; }
               .hud { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 8px; display:flex; gap:8px; flex-wrap:wrap; z-index:100; }
-              .babies-button, .friends-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
+              .babies-button, .friends-button, .profile-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
               .admin-button { background: linear-gradient(90deg,#f97316 0%,#ef4444 100%); color: white; font-weight: bold; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
-              .babies-button:hover, .admin-button:hover, .friends-button:hover { transform: scale(1.03); }
+              .babies-button:hover, .admin-button:hover, .friends-button:hover, .profile-button:hover { transform: scale(1.03); }
               .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 3000; }
               .modal { background: rgba(0,0,0,0.9); border: 2px solid rgba(34,211,238,0.5); border-radius: 16px; padding: 24px; max-width: 900px; width: 92%; max-height: 85vh; overflow: auto; color: white; }
               .modal-title { color: #22d3ee; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 12px; }
@@ -239,28 +239,21 @@
               .friend-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; display:flex; justify-content:space-between; align-items:center; }
               .friend-name { font-weight: 700; }
               .friend-actions { display:flex; gap:6px; flex-wrap:wrap; }
-             
               .mail-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 8px; }
               .mail-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
               .mail-from { font-weight: 700; color: #22d3ee; }
               .mail-time { font-size: 11px; color: #9ca3af; }
               .mail-body { font-size: 13px; color: #e5e7eb; }
-             
               .group-item { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; margin-bottom: 8px; cursor:pointer; }
               .group-item:hover { background: rgba(255,255,255,0.06); }
               .group-name { font-weight: 700; color: #22d3ee; margin-bottom:4px; }
               .group-members { font-size: 11px; color: #9ca3af; }
-                    /* Player Profile Styles */
-      .player { cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
-      .player:hover { transform: scale(1.12); box-shadow: 0 0 30px rgba(34,211,238,0.9); z-index: 10; }
-      .profile-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
-      .profile-button:hover { transform: scale(1.03); }
-      .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid #22d3ee; margin: 20px auto; box-shadow: 0 0 30px rgba(34,211,238,0.6); }
-      .profile-character { width: 120px; height: 120px; object-fit: contain; margin: 16px auto; border-radius: 12px; background: rgba(255,255,255,0.05); padding: 8px; }
-      .profile-info { margin: 12px 0; font-size: 18px; }
-      .profile-info strong { color: #22d3ee; }
-      .profile-image-input { width: 100%; padding: 12px; margin: 20px 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-size: 14px; }
-      .profile-image-input::placeholder { color: #9ca3af; }
+              .profile-pic { width: 160px; height: 160px; border-radius: 50%; object-fit: cover; border: 5px solid #22d3ee; margin: 20px auto; display: block; box-shadow: 0 0 30px rgba(34,211,238,0.6); }
+              .profile-character { width: 120px; height: 120px; object-fit: contain; margin: 16px auto; display: block; border-radius: 12px; background: rgba(255,255,255,0.05); padding: 8px; }
+              .profile-info { margin: 12px 0; font-size: 18px; text-align: center; }
+              .profile-info strong { color: #22d3ee; }
+              .profile-image-input { width: 100%; padding: 12px; margin: 20px 0 8px 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-size: 14px; }
+              .profile-image-input::placeholder { color: #9ca3af; }
     </style>
   </head>
   <body>
@@ -272,6 +265,7 @@
       import {
         getDatabase, ref, set, onValue, onDisconnect, get, remove, update, runTransaction, push
       } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+      
       const firebaseConfig = {
           apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
           authDomain: "s0lace-web.firebaseapp.com",
@@ -281,9 +275,11 @@
           messagingSenderId: "13647464646",
           appId: "1:13647464646:web:87ecb82a32ab6f0efaafc7"
       };
+      
       const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
       const { useState, useEffect, useRef } = React;
+      
       function MovementHub() {
           const [username, setUsername] = useState(null);
           const [inputUsername, setInputUsername] = useState('');
@@ -308,7 +304,8 @@
           const [selfModeration, setSelfModeration] = useState(null);
           const [countdown, setCountdown] = useState(null);
           const [showProfileModal, setShowProfileModal] = useState(false);
-          const [profileTarget, setProfileTarget] = useState(null); // null = my profile, else playerId
+          const [profileTarget, setProfileTarget] = useState(null);
+          const [isPageVisible, setIsPageVisible] = useState(true);
           const playerId = useRef(crypto.randomUUID());
           const renderRef = useRef({});
           const keysPressed = useRef({});
@@ -324,11 +321,10 @@
           const bubbleTimeouts = useRef({});
           const [orbCount, setOrbCount] = useState(0);
           const [orbLeaderboard, setOrbLeaderboard] = useState([]);
-         
           const orbClickHistory = useRef([]);
           const ORB_RATE_LIMIT = 100;
           const ORB_RATE_WINDOW = 2000;
-          const ORB_BAN_DURATION = 4 * 60 * 60 * 1000;
+          
           const characters = {
               aurababy: { name: 'Aurababy', image: 'https://i.ibb.co/nq467xv6/aurababy.png' },
               goonerbaby: { name: 'Goonerbaby', image: 'https://i.ibb.co/ZRPGHj01/goonerbaby.png' },
@@ -345,14 +341,17 @@
               baby_that_holds_aura: { name: 'The Baby That Holds Aura', image: 'https://i.ibb.co/jmTHJfh/The-Baby-That-Holds-Aura.jpg' },
               gangsta_baby: { name: 'Gangsta Baby', image: 'https://i.ibb.co/m5hpwbnt/gangstababy.jpg' }
           };
+          
           const MOD_FLASH_IMAGE = 'https://i.ibb.co/Kxp9Vhz7/judgment.jpg';
           const adminNames = ['kingderrick', 'grant', 'manny', 'daniel', 'levi'];
           const ADMIN_PASSWORD = 'chickenfishfarting';
+          
           const badWords = [
               'fuck','shit','damn','bitch','ass','asshole','bastard','crap',
               'piss','dick','cock','pussy','hell','whore','slut','fag',
               'nigger','nigga','retard','cunt','twat'
           ];
+          
           const tagDefs = {
               gold: { label: 'Supporter', color: '#FFD700', textColor: '#111' },
               green: { label: 'VERY Early Supporter', color: '#00C851', textColor: '#061a09' },
@@ -362,13 +361,14 @@
               friend: { label: 'Friend', color: '#10B981', textColor: '#fff' },
               timedout: { label: 'Timed Out', color: '#FFA500', textColor: '#111' }
           };
+          
           const containsBadWord = (text) => {
               const lowerText = (text || '').toLowerCase();
               return badWords.some(word => lowerText.includes(word));
           };
+          
           const durationMs = (label) => {
               if (!label || label === 'perm') return null;
-             
               let total = 0;
               const parts = label.split('-');
               for (const part of parts) {
@@ -376,7 +376,6 @@
                   if (!match) continue;
                   const value = parseInt(match[1]);
                   const unit = match[2];
-                 
                   switch (unit) {
                       case 's': total += value * 1000; break;
                       case 'm': total += value * 60 * 1000; break;
@@ -386,6 +385,7 @@
               }
               return total > 0 ? total : null;
           };
+          
           const showAnnouncement = (text, type = 'info') => {
               setAnnouncement({ text, type });
               if (announceTimeoutRef.current) clearTimeout(announceTimeoutRef.current);
@@ -394,6 +394,7 @@
                   announceTimeoutRef.current = null;
               }, 7000);
           };
+          
           const validateAndFetchModerationEntry = async (path, key) => {
               const nodeRef = ref(db, `${path}/${key}`);
               const snap = await get(nodeRef);
@@ -405,6 +406,7 @@
               }
               return data;
           };
+          
           const removePlayerByUsername = async (target) => {
               const lowerTarget = target.toLowerCase();
               for (const [id, p] of Object.entries(players || {})) {
@@ -413,6 +415,7 @@
                   }
               }
           };
+          
           const applyModeration = async (targetUsername, type, durationLabel, reason = '') => {
               if (!username) return alert('You are not signed in as admin.');
               const isAdmin = adminNames.includes((username || '').toLowerCase());
@@ -436,6 +439,7 @@
                   showAnnouncement(`${targetUsername} was TIMED OUT by ${username}${reason ? ': ' + reason : ''}`, 'timeout');
               }
           };
+          
           const removeModeration = async (targetUsername, type) => {
               const key = targetUsername.toLowerCase();
               if (type === 'ban') {
@@ -446,6 +450,7 @@
                   showAnnouncement(`${targetUsername} timeout was REMOVED by ${username}`, 'info');
               }
           };
+          
           const deleteMessage = async (msgId) => {
               try {
                   await remove(ref(db, `chat/channels/${chatChannel}/messages/${msgId}`));
@@ -453,61 +458,58 @@
                   console.error('Failed to delete message', err);
               }
           };
+          
           const sendFriendRequest = async (targetUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const targetLower = targetUsername.toLowerCase();
-             
               if (lower === targetLower) return alert('Cannot add yourself as friend');
               if (friends.includes(targetLower)) return alert('Already friends');
-             
               await set(ref(db, `friends/${targetLower}/requests/${lower}`), {
                   from: username,
                   ts: Date.now()
               });
               showAnnouncement(`Friend request sent to ${targetUsername}`, 'info');
           };
+          
           const acceptFriendRequest = async (requesterUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const requesterLower = requesterUsername.toLowerCase();
-             
               await set(ref(db, `friends/${lower}/friendsList/${requesterLower}`), true);
               await set(ref(db, `friends/${requesterLower}/friendsList/${lower}`), true);
               await remove(ref(db, `friends/${lower}/requests/${requesterLower}`));
-             
               showAnnouncement(`You are now friends with ${requesterUsername}`, 'info');
           };
+          
           const removeFriend = async (friendUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const friendLower = friendUsername.toLowerCase();
-             
               await remove(ref(db, `friends/${lower}/friendsList/${friendLower}`));
               await remove(ref(db, `friends/${friendLower}/friendsList/${lower}`));
-             
               showAnnouncement(`Removed ${friendUsername} from friends`, 'info');
           };
+          
           const blockUser = async (targetUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const targetLower = targetUsername.toLowerCase();
-             
               await set(ref(db, `blocked/${lower}/${targetLower}`), true);
               showAnnouncement(`Blocked ${targetUsername}`, 'info');
           };
+          
           const unblockUser = async (targetUsername) => {
               if (!username) return;
               const lower = username.toLowerCase();
               const targetLower = targetUsername.toLowerCase();
-             
               await remove(ref(db, `blocked/${lower}/${targetLower}`));
               showAnnouncement(`Unblocked ${targetUsername}`, 'info');
           };
+          
           const sendMailToFriend = async (friendUsername, message) => {
               if (!username) return;
               if (!message.trim()) return alert('Message cannot be empty');
-             
               const friendLower = friendUsername.toLowerCase();
               const mailRef = push(ref(db, `friends/${friendLower}/mailbox`));
               await set(mailRef, {
@@ -515,22 +517,21 @@
                   text: message,
                   ts: Date.now()
               });
-             
               showAnnouncement(`Mail sent to ${friendUsername}`, 'info');
           };
+          
           const deleteMail = async (mailId) => {
               if (!username) return;
               const lower = username.toLowerCase();
               await remove(ref(db, `friends/${lower}/mailbox/${mailId}`));
           };
+          
           const createFriendGroup = async (groupName, members) => {
               if (!username) return;
               if (!groupName.trim()) return alert('Group name cannot be empty');
               if (members.length < 2) return alert('Need at least 2 members');
-             
               const lower = username.toLowerCase();
               const membersList = [lower, ...members.map(m => m.toLowerCase())];
-             
               const groupRef = push(ref(db, 'friendGroups'));
               await set(groupRef, {
                   name: groupName,
@@ -538,9 +539,9 @@
                   members: membersList,
                   ts: Date.now()
               });
-             
               showAnnouncement(`Created group: ${groupName}`, 'info');
           };
+          
           const handleUsernameSubmit = async (e) => {
               if (e && e.preventDefault) e.preventDefault();
               setError('');
@@ -587,10 +588,12 @@
               localStorage.setItem('movement_hub_username', trimmedUsername);
               setUsername(trimmedUsername);
           };
+          
           useEffect(() => {
               const stored = localStorage.getItem('movement_hub_username');
               if (stored) setUsername(stored);
           }, []);
+          
           useEffect(() => {
               const bansRef = ref(db, 'moderation/bans');
               const timeoutsRef = ref(db, 'moderation/timeouts');
@@ -615,6 +618,7 @@
                   setModeration(prev => ({ ...prev, timeouts: next }));
               });
           }, []);
+          
           useEffect(() => {
               if (!username) return;
               const lower = username.toLowerCase();
@@ -629,6 +633,7 @@
                   }
               });
           }, [username]);
+          
           useEffect(() => {
               if (!selfModeration) {
                   setCountdown(null);
@@ -651,6 +656,16 @@
               const id = setInterval(update, 1000);
               return () => clearInterval(id);
           }, [selfModeration]);
+          
+          // Track page visibility
+          useEffect(() => {
+              const handleVisibilityChange = () => {
+                  setIsPageVisible(!document.hidden);
+              };
+              document.addEventListener('visibilitychange', handleVisibilityChange);
+              return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+          }, []);
+          
           useEffect(() => {
               if (!username) return;
               const handleKeyDown = (e) => {
@@ -667,7 +682,6 @@
                       keysPressed.current[key] = true;
                   }
               };
-             
               const handleKeyUp = (e) => {
                   const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : null;
                   const isEditable = tag === 'input' || tag === 'textarea' || e.target && e.target.isContentEditable;
@@ -708,6 +722,7 @@
                   if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
               };
           }, [username, selfModeration]);
+          
           useEffect(() => {
               if (!username) return;
               if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
@@ -720,10 +735,12 @@
                   x: position.x,
                   y: position.y,
                   character: selectedCharacter,
-                  admin: adminNames.includes(username.toLowerCase())
+                  admin: adminNames.includes(username.toLowerCase()),
+                  lastActive: Date.now()
               });
               onDisconnect(playerRef).remove();
           }, [username, selfModeration]);
+          
           useEffect(() => {
               if (!username) return;
               const playerRef = ref(db, `players/${playerId.current}`);
@@ -732,53 +749,83 @@
                       set(playerRef, null);
                       return;
                   }
-                  set(playerRef, {
-                      username,
-                      x: position.x,
-                      y: position.y,
-                      character: selectedCharacter,
-                      admin: adminNames.includes(username.toLowerCase())
-                  });
+                  if (isPageVisible) {
+                      set(playerRef, {
+                          username,
+                          x: position.x,
+                          y: position.y,
+                          character: selectedCharacter,
+                          admin: adminNames.includes(username.toLowerCase()),
+                          lastActive: Date.now()
+                      });
+                  }
               }, 66);
               return () => clearInterval(interval);
-          }, [username, position.x, position.y, selectedCharacter, selfModeration]);
+          }, [username, position.x, position.y, selectedCharacter, selfModeration, isPageVisible]);
+          
+          // Cleanup inactive players
+          useEffect(() => {
+              const INACTIVITY_TIMEOUT = 30000;
+              const cleanup = setInterval(async () => {
+                  const playersRef = ref(db, 'players');
+                  const snapshot = await get(playersRef);
+                  const allPlayers = snapshot.val() || {};
+                  const now = Date.now();
+                  for (const [id, player] of Object.entries(allPlayers)) {
+                      if (player.lastActive && (now - player.lastActive) > INACTIVITY_TIMEOUT) {
+                          await remove(ref(db, `players/${id}`));
+                      }
+                  }
+              }, 10000);
+              return () => clearInterval(cleanup);
+          }, []);
+          
           useEffect(() => {
               const playersRef = ref(db, 'players');
               return onValue(playersRef, snapshot => {
                   setPlayers(snapshot.val() || {});
               });
           }, []);
-          // Profile tracking: time spent + aura + character + join date
+          
+          // Profile tracking
           useEffect(() => {
               if (!username) return;
               const profileRef = ref(db, `profiles/${username.toLowerCase()}`);
-              // Initialize or update profile
               const initProfile = async () => {
                   const snap = await get(profileRef);
                   if (!snap.exists()) {
-                      set(profileRef, {
+                      await set(profileRef, {
                           joinDate: Date.now(),
                           timeSpent: 0,
                           auraClicks: 0,
                           character: selectedCharacter,
                           profileImage: ''
                       });
+                  } else {
+                      await update(profileRef, { character: selectedCharacter });
                   }
               };
               initProfile();
-              // Update time every minute
               const timer = setInterval(() => {
                   runTransaction(profileRef, (profile) => {
                       if (profile) {
                           profile.timeSpent = (profile.timeSpent || 0) + 60;
                           profile.character = selectedCharacter;
+                      } else {
+                          return {
+                              joinDate: Date.now(),
+                              timeSpent: 60,
+                              auraClicks: 0,
+                              character: selectedCharacter,
+                              profileImage: ''
+                          };
                       }
                       return profile;
                   });
               }, 60000);
-              // Update aura clicks when orb is clicked (connect to your existing orb click handler later)
               return () => clearInterval(timer);
           }, [username, selectedCharacter]);
+          
           useEffect(() => {
               const next = {};
               for (const [id, p] of Object.entries(players || {})) {
@@ -797,6 +844,7 @@
               }
               renderRef.current = next;
           }, [players, position, username, selectedCharacter]);
+          
           useEffect(() => {
               if (!username) return;
               const lower = username.toLowerCase();
@@ -844,22 +892,18 @@
                   setOrbLeaderboard(arr.slice(0,5));
               });
           }, [username]);
+          
           useEffect(() => {
               if (!username) return;
-             
-             
-             
               const msgsRef = ref(db, `chat/channels/${chatChannel}/messages`);
               onValue(msgsRef, snapshot => {
                   const val = snapshot.val() || {};
                   const arr = Object.entries(val).map(([k,v]) => ({ id: k, ...v })).sort((a,b) => (a.ts||0) - (b.ts||0));
-                 
                   const filtered = arr.filter(m => {
                       const senderLower = (m.username || '').toLowerCase();
                       if (blockedUsers.includes(senderLower)) return false;
                       return true;
                   }).slice(-CHAT_MAX);
-                 
                   setChatMessages(filtered);
                   const now = Date.now();
                   arr.forEach(m => {
@@ -888,6 +932,7 @@
                   });
               });
           }, [username, chatChannel, blockedUsers]);
+          
           const assignTag = async (targetUsername, tagKey) => {
               if (!username) return alert('Sign in as admin to assign tags.');
               if (!adminNames.includes((username || '').toLowerCase())) return alert('Only admins can assign tags.');
@@ -901,31 +946,29 @@
                   showAnnouncement(`${targetUsername} was given the ${tagKey} tag by ${username}`, 'info');
               }
           };
+          
           const handleChatChange = (e) => {
               let v = e.target.value || '';
               v = v.toLowerCase();
               v = v.replace(/[^a-z ]/g, '');
               setChatInput(v);
           };
+          
           const handleChatSend = async (e) => {
               if (e && e.preventDefault) e.preventDefault();
               if (!username) return;
-             
               const lower = username.toLowerCase();
               const timeoutEntry = moderation.timeouts[lower];
               if (timeoutEntry && (!timeoutEntry.expiresAt || Date.now() < timeoutEntry.expiresAt)) {
                   return alert('You are timed out and cannot chat.');
               }
-             
               let text = (chatInput || '').trim();
               if (!text) return;
-             
               if (text === '/clear') {
                   setChatMessages([]);
                   setChatInput('');
                   return;
               }
-             
               if (text.length > 200) return alert('Message too long (200 chars max)');
               if (containsBadWord(text)) return alert('Message contains inappropriate language');
               try {
@@ -952,56 +995,65 @@
               }
               setChatInput('');
           };
+          
           const onChatKeyDown = (e) => {
               if (e.key === 'Enter') {
                   e.preventDefault();
                   handleChatSend();
               }
           };
+          
           const handleOrbClick = async () => {
               if (!username) {
                   showAnnouncement('Sign in to click the orb', 'info');
                   return;
               }
-              const lower = username.toLowerCase();
-              const userProfileRef = ref(db, `profiles/${lower}`);
-              runTransaction(userProfileRef, (profile) => {
-                  if (profile) profile.auraClicks = (profile.auraClicks || 0) + 1;
-                  return profile;
-              });
               if (selfModeration && (!selfModeration.expiresAt || Date.now() < selfModeration.expiresAt)) {
                   return showAnnouncement('You are moderated and cannot click the orb', 'info');
               }
-             
               const now = Date.now();
               orbClickHistory.current.push(now);
               orbClickHistory.current = orbClickHistory.current.filter(t => now - t < ORB_RATE_WINDOW);
-             
               if (orbClickHistory.current.length > ORB_RATE_LIMIT) {
-                  const lower = username.toLowerCase();
                   await applyModeration(username, 'ban', '4h', 'Clicking orb too fast (auto-ban)');
                   return;
               }
-             
               try {
+                  const lower = username.toLowerCase();
                   const countRef = ref(db, 'orb/count');
                   await runTransaction(countRef, (current) => {
                       return (current || 0) + 1;
                   });
-                  const lower = username.toLowerCase();
                   const userClickRef = ref(db, `orb/clicks/${lower}`);
                   await runTransaction(userClickRef, (current) => {
                       return (current || 0) + 1;
+                  });
+                  const userProfileRef = ref(db, `profiles/${lower}`);
+                  await runTransaction(userProfileRef, (profile) => {
+                      if (profile) {
+                          profile.auraClicks = (profile.auraClicks || 0) + 1;
+                      } else {
+                          return {
+                              joinDate: Date.now(),
+                              timeSpent: 0,
+                              auraClicks: 1,
+                              character: selectedCharacter,
+                              profileImage: ''
+                          };
+                      }
+                      return profile;
                   });
                   showAnnouncement(`+1 Aura!`, 'info');
               } catch (err) {
                   console.error('orb click failed', err);
               }
           };
+          
           function ProfileModal({ profileTarget, username, selectedCharacter, players, onClose }) {
               const [profileData, setProfileData] = useState({});
+              const fileInputRef = useRef(null);
               const targetUsername = profileTarget ? players[profileTarget]?.username : username;
-              const isOwnProfile = targetUsername.toLowerCase() === username.toLowerCase();
+              const isOwnProfile = targetUsername && targetUsername.toLowerCase() === username.toLowerCase();
               useEffect(() => {
                   if (!targetUsername) return;
                   const profRef = ref(db, `profiles/${targetUsername.toLowerCase()}`);
@@ -1016,7 +1068,34 @@
                   const m = Math.floor((sec % 3600) / 60);
                   return h > 0 ? `${h}h ${m}m` : `${m}m`;
               };
-              const formatDate = (ts) => new Date(ts).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+              const formatDate = (ts) => {
+                  if (!ts) return 'Today';
+                  return new Date(ts).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+              };
+              const handleFileSelect = (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  if (!file.type.startsWith('image/')) {
+                      alert('Please select an image file');
+                      return;
+                  }
+                  if (file.size > 5 * 1024 * 1024) {
+                      alert('Image must be less than 5MB');
+                      return;
+                  }
+                  const reader = new FileReader();
+                  reader.onload = async (event) => {
+                      const dataUrl = event.target.result;
+                      try {
+                          await update(ref(db, `profiles/${username.toLowerCase()}`), { profileImage: dataUrl });
+                          showAnnouncement('Profile picture updated!', 'info');
+                      } catch (err) {
+                          console.error('Failed to update profile image', err);
+                          alert('Failed to update profile picture');
+                      }
+                  };
+                  reader.readAsDataURL(file);
+              };
               return React.createElement('div', { className: 'modal', onClick: (e) => e.stopPropagation() },
                   React.createElement('div', { className: 'modal-title' },
                       isOwnProfile ? 'My Profile' : (targetUsername + "'s Profile")
@@ -1032,24 +1111,45 @@
                       alt: 'Current Baby'
                   }),
                   React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Username: '), targetUsername),
-                  React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Member Since: '), profileData.joinDate ? formatDate(profileData.joinDate) : 'Today'),
+                  React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Member Since: '), formatDate(profileData.joinDate)),
                   React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Time on AuraBabyHub: '), formatTime(profileData.timeSpent || 0)),
                   React.createElement('div', { className: 'profile-info' }, React.createElement('strong', null, 'Aura Contributed: '), profileData.auraClicks || 0),
-                  isOwnProfile && React.createElement('input', {
-                      type: 'text',
-                      className: 'profile-image-input',
-                      placeholder: 'Paste image URL & press Enter to set profile picture',
-                      onKeyDown: (e) => {
-                          if (e.key === 'Enter') {
-                              const url = e.target.value.trim();
-                              update(ref(db, `profiles/${username.toLowerCase()}`), { profileImage: url || null });
-                              e.target.value = '';
+                  isOwnProfile && React.createElement('div', null,
+                      React.createElement('input', {
+                          type: 'text',
+                          className: 'profile-image-input',
+                          placeholder: 'Paste image URL & press Enter to set profile picture',
+                          onKeyDown: async (e) => {
+                              if (e.key === 'Enter') {
+                                  const url = e.target.value.trim();
+                                  try {
+                                      await update(ref(db, `profiles/${username.toLowerCase()}`), { profileImage: url || '' });
+                                      showAnnouncement('Profile picture updated!', 'info');
+                                      e.target.value = '';
+                                  } catch (err) {
+                                      console.error('Failed to update profile image', err);
+                                      alert('Failed to update profile picture');
+                                  }
+                              }
                           }
-                      }
-                  }),
+                      }),
+                      React.createElement('input', {
+                          ref: fileInputRef,
+                          type: 'file',
+                          accept: 'image/*',
+                          style: { display: 'none' },
+                          onChange: handleFileSelect
+                      }),
+                      React.createElement('button', {
+                          className: 'close-modal',
+                          style: { marginTop: '12px', marginBottom: '8px' },
+                          onClick: () => fileInputRef.current && fileInputRef.current.click()
+                      }, 'Upload Image from Computer')
+                  ),
                   React.createElement('button', { className: 'close-modal', onClick: onClose }, 'Close')
               );
           }
+          
           if (!username) {
               return React.createElement('div', { className: 'screen center-container' },
                   React.createElement('div', { className: 'welcome-box' },
@@ -1071,11 +1171,12 @@
                   )
               );
           }
+          
           const isAdminUser = adminNames.includes((username || '').toLowerCase());
           const uniquePlayerUsernames = [...new Set(Object.values(players || {}).map(p => p.username).filter(Boolean))];
-         
           const isTimedOut = moderation.timeouts[(username || '').toLowerCase()];
           const timedOutRemaining = isTimedOut && isTimedOut.expiresAt ? Math.max(0, isTimedOut.expiresAt - Date.now()) : null;
+          
           const formatRemaining = (ms) => {
               if (ms == null) return 'Permanent';
               if (ms <= 1000) return '0s';
@@ -1090,49 +1191,47 @@
               const days = Math.floor(hours / 24);
               return `${days}d`;
           };
+          
           const renderChatTag = (u) => {
               const lower = (u || '').toLowerCase();
               if (adminNames.includes(lower)) {
                   return React.createElement('span', { className: 'chat-tag admin', style: { background: 'linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff)', color: '#fff', fontWeight: 900 } }, 'ADMIN');
               }
-             
               if (moderation.timeouts[lower]) {
                   const def = tagDefs.timedout;
                   return React.createElement('span', { className: 'chat-tag', style: { background: def.color, color: def.textColor } }, def.label);
               }
-             
               if (friends.includes(lower)) {
                   const def = tagDefs.friend;
                   return React.createElement('span', { className: 'chat-tag', style: { background: def.color, color: def.textColor } }, def.label);
               }
-             
               const t = nameTags[lower];
               if (!t) return null;
               const def = tagDefs[t];
               if (!def) return null;
               return React.createElement('span', { className: 'chat-tag', style: { background: def.color, color: def.textColor } }, def.label);
           };
+          
           const renderNameTagBar = (u, isAdminFlag) => {
               const lower = (u || '').toLowerCase();
               if (isAdminFlag) {
                   return React.createElement('div', { className: 'name-tag-bar', style: { background: 'linear-gradient(90deg,#ff0000,#ff7f00,#ffff00,#00ff00,#0000ff,#4b0082,#8f00ff)' } });
               }
-             
               if (moderation.timeouts[lower]) {
                   return React.createElement('div', { className: 'name-tag-bar', style: { background: tagDefs.timedout.color } });
               }
-             
               if (friends.includes(lower)) {
                   return React.createElement('div', { className: 'name-tag-bar', style: { background: tagDefs.friend.color } });
               }
-             
               const t = nameTags[lower];
               if (!t) return null;
               const def = tagDefs[t];
               if (!def) return null;
               return React.createElement('div', { className: 'name-tag-bar', style: { background: def.color } });
           };
+          
           const hideOrb = showModal || showAdminModal || showFriendsModal || selfModeration;
+          
           return React.createElement('div', { className: 'screen' },
               React.createElement('div', { className: 'grid-bg' }),
               announcement && React.createElement('div', {
@@ -1161,7 +1260,6 @@
               Object.entries(renderRef.current).map(([id, p]) =>
                   React.createElement(React.Fragment, { key: id },
                       React.createElement('div', {
-                          key: id,
                           className: 'player',
                           style: { left: `${p.x}px`, top: `${p.y}px` },
                           onClick: () => {
@@ -1262,7 +1360,8 @@
                                           x: position.x,
                                           y: position.y,
                                           character: key,
-                                          admin: adminNames.includes(username.toLowerCase())
+                                          admin: adminNames.includes(username.toLowerCase()),
+                                          lastActive: Date.now()
                                       });
                                       setShowModal(false);
                                   }
@@ -1491,6 +1590,7 @@
               )
           );
       }
+      
       ReactDOM.render(React.createElement(MovementHub), document.getElementById('root'));
     </script>
   </body>
