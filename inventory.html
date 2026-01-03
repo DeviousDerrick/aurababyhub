@@ -1,1 +1,585 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800;900&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #581c87 50%, #312e81 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden;
+        }
+        
+        .grid-bg {
+            position: fixed;
+            inset: 0;
+            opacity: 0.12;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            background: linear-gradient(90deg, #22d3ee, #3b82f6);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+            transition: transform 0.2s;
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .nav-btn.shop {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+        }
+        
+        .equipped-section {
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(139,92,246,0.3);
+        }
+        
+        .equipped-section h2 {
+            color: #8b5cf6;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .equipped-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .equipped-slot {
+            background: rgba(255,255,255,0.05);
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .equipped-slot.filled {
+            border: 2px solid #8b5cf6;
+            background: rgba(139,92,246,0.1);
+        }
+        
+        .equipped-slot h3 {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+        
+        .equipped-item {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+        
+        .equipped-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #8b5cf6;
+        }
+        
+        .unequip-btn {
+            margin-top: 10px;
+            background: rgba(255,59,48,0.2);
+            border: 1px solid #ff3b30;
+            color: #ff3b30;
+            padding: 5px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .unequip-btn:hover {
+            background: rgba(255,59,48,0.3);
+        }
+        
+        .inventory-section {
+            margin-bottom: 30px;
+        }
+        
+        .category-header {
+            background: rgba(0,0,0,0.4);
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: 800;
+            color: #22d3ee;
+            border-left: 4px solid #22d3ee;
+        }
+        
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .inventory-item {
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 15px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .inventory-item:hover {
+            transform: translateY(-3px);
+            border-color: #8b5cf6;
+            box-shadow: 0 8px 20px rgba(139,92,246,0.3);
+        }
+        
+        .inventory-item.equipped {
+            border-color: #10b981;
+            background: rgba(16,185,129,0.1);
+        }
+        
+        .item-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        
+        .item-emoji {
+            font-size: 48px;
+        }
+        
+        .item-info {
+            flex: 1;
+        }
+        
+        .item-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: #22d3ee;
+            margin-bottom: 4px;
+        }
+        
+        .item-category {
+            font-size: 11px;
+            color: #9ca3af;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+        
+        .item-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 13px;
+            transition: transform 0.2s;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .action-btn.equip {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .action-btn.unequip {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+        
+        .empty-state h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .empty-state p {
+            margin-bottom: 25px;
+        }
+        
+        .shop-link {
+            background: linear-gradient(90deg, #fbbf24, #f59e0b);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.9);
+            border: 2px solid #22d3ee;
+            border-radius: 12px;
+            padding: 15px 25px;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            border-color: #10b981;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 20px;
+            color: #22d3ee;
+        }
+        
+        .equipped-badge {
+            background: #10b981;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🎒 My Inventory</h1>
+            <div class="nav-buttons">
+                <button class="nav-btn shop" onclick="location.href='shop.html'">🛒 Shop</button>
+                <button class="nav-btn" onclick="location.href='index.html'">🏠 Back to Hub</button>
+            </div>
+        </div>
+        
+        <div class="equipped-section">
+            <h2>⚡ Currently Equipped</h2>
+            <div class="equipped-grid">
+                <div class="equipped-slot" id="slot-nametag">
+                    <h3>Name Tag</h3>
+                    <div class="equipped-item">📛</div>
+                    <div class="equipped-name">None</div>
+                </div>
+                <div class="equipped-slot" id="slot-effect">
+                    <h3>Effect</h3>
+                    <div class="equipped-item">✨</div>
+                    <div class="equipped-name">None</div>
+                </div>
+                <div class="equipped-slot" id="slot-accessory">
+                    <h3>Accessory</h3>
+                    <div class="equipped-item">🎭</div>
+                    <div class="equipped-name">None</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="inventoryContainer">
+            <div class="loading">Loading your inventory...</div>
+        </div>
+    </div>
+    
+    <div id="notification" class="notification"></div>
+    
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getDatabase, ref, get, set, update, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbgy76ThxHaKlOhpiLQ6Nw4ekR1b9t3DA",
+            authDomain: "s0lace-web.firebaseapp.com",
+            databaseURL: "https://s0lace-web-default-rtdb.firebaseio.com",
+            projectId: "s0lace-web",
+            storageBucket: "s0lace-web.firebasestorage.app",
+            messagingSenderId: "13647464646",
+            appId: "1:13647464646:web:87ecb82a32ab6f0efaafc7"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        
+        let currentUsername = localStorage.getItem('movement_hub_username');
+        let inventory = {};
+        let equipped = {
+            nametag: null,
+            effect: null,
+            accessory: null
+        };
+        
+        const categoryMap = {
+            'nametags': 'nametag',
+            'effects': 'effect',
+            'accessories': 'accessory'
+        };
+        
+        if (!currentUsername) {
+            alert('Please sign in first!');
+            window.location.href = 'index.html';
+        }
+        
+        async function loadInventory() {
+            const lower = currentUsername.toLowerCase();
+            const inventoryRef = ref(db, `inventory/${lower}`);
+            const equippedRef = ref(db, `equipped/${lower}`);
+            
+            const inventorySnap = await get(inventoryRef);
+            const equippedSnap = await get(equippedRef);
+            
+            if (inventorySnap.exists()) {
+                inventory = inventorySnap.val();
+            }
+            
+            if (equippedSnap.exists()) {
+                equipped = equippedSnap.val();
+            }
+            
+            renderEquipped();
+            renderInventory();
+        }
+        
+        function renderEquipped() {
+            // Render name tag slot
+            if (equipped.nametag && inventory[equipped.nametag]) {
+                const item = inventory[equipped.nametag];
+                document.getElementById('slot-nametag').innerHTML = `
+                    <h3>Name Tag</h3>
+                    <div class="equipped-item">${item.emoji}</div>
+                    <div class="equipped-name">${item.name}</div>
+                    <button class="unequip-btn" onclick="unequipItem('nametag')">Unequip</button>
+                `;
+                document.getElementById('slot-nametag').classList.add('filled');
+            }
+            
+            // Render effect slot
+            if (equipped.effect && inventory[equipped.effect]) {
+                const item = inventory[equipped.effect];
+                document.getElementById('slot-effect').innerHTML = `
+                    <h3>Effect</h3>
+                    <div class="equipped-item">${item.emoji}</div>
+                    <div class="equipped-name">${item.name}</div>
+                    <button class="unequip-btn" onclick="unequipItem('effect')">Unequip</button>
+                `;
+                document.getElementById('slot-effect').classList.add('filled');
+            }
+            
+            // Render accessory slot
+            if (equipped.accessory && inventory[equipped.accessory]) {
+                const item = inventory[equipped.accessory];
+                document.getElementById('slot-accessory').innerHTML = `
+                    <h3>Accessory</h3>
+                    <div class="equipped-item">${item.emoji}</div>
+                    <div class="equipped-name">${item.name}</div>
+                    <button class="unequip-btn" onclick="unequipItem('accessory')">Unequip</button>
+                `;
+                document.getElementById('slot-accessory').classList.add('filled');
+            }
+        }
+        
+        function renderInventory() {
+            const container = document.getElementById('inventoryContainer');
+            
+            if (Object.keys(inventory).length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>Your inventory is empty!</h3>
+                        <p>Visit the shop to purchase items with your Aura.</p>
+                        <a href="shop.html" class="shop-link">🛒 Go to Shop</a>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Group items by category
+            const grouped = {
+                nametags: [],
+                effects: [],
+                accessories: []
+            };
+            
+            Object.entries(inventory).forEach(([id, item]) => {
+                if (grouped[item.category]) {
+                    grouped[item.category].push({ id, ...item });
+                }
+            });
+            
+            let html = '';
+            
+            // Render each category
+            Object.entries(grouped).forEach(([category, items]) => {
+                if (items.length === 0) return;
+                
+                const categoryNames = {
+                    nametags: 'Name Tags',
+                    effects: 'Effects',
+                    accessories: 'Accessories'
+                };
+                
+                html += `
+                    <div class="inventory-section">
+                        <div class="category-header">${categoryNames[category]}</div>
+                        <div class="items-grid">
+                            ${items.map(item => {
+                                const slot = categoryMap[category];
+                                const isEquipped = equipped[slot] === item.id;
+                                
+                                return `
+                                    <div class="inventory-item ${isEquipped ? 'equipped' : ''}">
+                                        <div class="item-header">
+                                            <div class="item-emoji">${item.emoji}</div>
+                                            <div class="item-info">
+                                                <div class="item-name">${item.name}</div>
+                                                <div class="item-category">${category}</div>
+                                            </div>
+                                        </div>
+                                        ${isEquipped 
+                                            ? '<div class="equipped-badge">✓ EQUIPPED</div>'
+                                            : `<div class="item-actions">
+                                                <button class="action-btn equip" onclick="equipItem('${item.id}', '${category}')">
+                                                    Equip
+                                                </button>
+                                            </div>`
+                                        }
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+        
+        window.equipItem = async (itemId, category) => {
+            try {
+                const lower = currentUsername.toLowerCase();
+                const slot = categoryMap[category];
+                const equippedRef = ref(db, `equipped/${lower}/${slot}`);
+                
+                await set(equippedRef, itemId);
+                equipped[slot] = itemId;
+                
+                showNotification('Item equipped!', 'success');
+                renderEquipped();
+                renderInventory();
+                
+            } catch (err) {
+                console.error('Equip failed:', err);
+                showNotification('Failed to equip item', 'error');
+            }
+        };
+        
+        window.unequipItem = async (slot) => {
+            try {
+                const lower = currentUsername.toLowerCase();
+                const equippedRef = ref(db, `equipped/${lower}/${slot}`);
+                
+                await remove(equippedRef);
+                equipped[slot] = null;
+                
+                showNotification('Item unequipped!', 'success');
+                renderEquipped();
+                renderInventory();
+                
+            } catch (err) {
+                console.error('Unequip failed:', err);
+                showNotification('Failed to unequip item', 'error');
+            }
+        };
+        
+        function showNotification(message, type = 'success') {
+            const notif = document.getElementById('notification');
+            notif.textContent = message;
+            notif.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3000);
+        }
+        
+        loadInventory();
+    </script>
+</body>
+</html>
