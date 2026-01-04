@@ -17,9 +17,11 @@
               .player { position: absolute; width: 48px; height: 48px; background: linear-gradient(135deg,#22d3ee 0%,#3b82f6 100%); border-radius: 8px; box-shadow: 0 0 20px rgba(34,211,238,0.6); transition: left 80ms linear, top 80ms linear; overflow: hidden; cursor: pointer; }
               .player:hover { transform: scale(1.12); box-shadow: 0 0 30px rgba(34,211,238,0.9); z-index: 10; }
               .hud { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; padding: 12px 16px; border-radius: 8px; display:flex; gap:8px; flex-wrap:wrap; z-index:100; }
-              .babies-button, .friends-button, .profile-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
+              .babies-button, .friends-button,               .profile-button { background: linear-gradient(90deg,#22d3ee 0%,#3b82f6 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
+              .shop-button { background: linear-gradient(90deg,#fbbf24 0%,#f59e0b 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
+              .inventory-button { background: linear-gradient(90deg,#8b5cf6 0%,#7c3aed 100%); color: white; font-weight: bold; padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
               .admin-button { background: linear-gradient(90deg,#f97316 0%,#ef4444 100%); color: white; font-weight: bold; padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; font-size:14px; }
-              .babies-button:hover, .admin-button:hover, .friends-button:hover, .profile-button:hover { transform: scale(1.03); }
+              .babies-button:hover, .admin-button:hover, .friends-button:hover, .profile-button:hover, .shop-button:hover, .inventory-button:hover { transform: scale(1.03); }
               .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 3000; }
               .modal { background: rgba(0,0,0,0.9); border: 2px solid rgba(34,211,238,0.5); border-radius: 16px; padding: 24px; max-width: 900px; width: 92%; max-height: 85vh; overflow: auto; color: white; }
               .modal-title { color: #22d3ee; font-size: 22px; font-weight: bold; text-align: center; margin-bottom: 12px; }
@@ -254,6 +256,38 @@
               .profile-info strong { color: #22d3ee; }
               .profile-image-input { width: 100%; padding: 12px; margin: 20px 0 8px 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; font-size: 14px; }
               .profile-image-input::placeholder { color: #9ca3af; }
+              .aura-orb-spawn {
+                  position: absolute;
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-weight: 900;
+                  font-size: 12px;
+                  color: white;
+                  cursor: default;
+                  animation: orbFloat 3s ease-in-out infinite, orbGlow 2s ease-in-out infinite;
+                  z-index: 100;
+                  box-shadow: 0 0 20px currentColor;
+              }
+              @keyframes orbFloat {
+                  0%, 100% { transform: translateY(0px); }
+                  50% { transform: translateY(-10px); }
+              }
+              @keyframes orbGlow {
+                  0%, 100% { box-shadow: 0 0 20px currentColor; }
+                  50% { box-shadow: 0 0 40px currentColor; }
+              }
+              .aura-orb-spawn.tier-1 { background: linear-gradient(135deg, #10b981, #059669); }
+              .aura-orb-spawn.tier-2 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+              .aura-orb-spawn.tier-3 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+              .aura-orb-spawn.tier-4 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+              .aura-orb-spawn.tier-5 { background: linear-gradient(135deg, #ef4444, #dc2626); }
+              .aura-orb-spawn.tier-6 { background: linear-gradient(135deg, #ec4899, #db2777); }
+              .aura-orb-spawn.tier-7 { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+              .aura-orb-spawn.tier-8 { background: linear-gradient(135deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff); animation: orbFloat 3s ease-in-out infinite, orbGlow 2s ease-in-out infinite, rainbow 3s linear infinite; }
     </style>
   </head>
   <body>
@@ -317,10 +351,12 @@
           const CHAT_COOLDOWN_MS = 5000;
           const BUBBLE_DURATION = 5000;
           const [nameTags, setNameTags] = useState({});
+          const [playerEquipped, setPlayerEquipped] = useState({});
           const [bubbles, setBubbles] = useState({});
           const bubbleTimeouts = useRef({});
           const [orbCount, setOrbCount] = useState(0);
           const [orbLeaderboard, setOrbLeaderboard] = useState([]);
+          const [spawnedOrbs, setSpawnedOrbs] = useState([]);
           const orbClickHistory = useRef([]);
           const ORB_RATE_LIMIT = 100;
           const ORB_RATE_WINDOW = 2000;
@@ -826,6 +862,114 @@
               return () => clearInterval(timer);
           }, [username, selectedCharacter]);
           
+          // Spawning aura orbs system
+          useEffect(() => {
+              const spawnOrb = () => {
+                  const tiers = [
+                      { value: 10, weight: 30, tier: 1 },
+                      { value: 25, weight: 25, tier: 2 },
+                      { value: 50, weight: 20, tier: 3 },
+                      { value: 100, weight: 12, tier: 4 },
+                      { value: 175, weight: 7, tier: 5 },
+                      { value: 250, weight: 4, tier: 6 },
+                      { value: 500, weight: 1.5, tier: 7 },
+                      { value: 1000, weight: 0.5, tier: 8 }
+                  ];
+                  
+                  const totalWeight = tiers.reduce((sum, t) => sum + t.weight, 0);
+                  let random = Math.random() * totalWeight;
+                  
+                  let selectedTier = tiers[0];
+                  for (const tier of tiers) {
+                      random -= tier.weight;
+                      if (random <= 0) {
+                          selectedTier = tier;
+                          break;
+                      }
+                  }
+                  
+                  const newOrb = {
+                      id: crypto.randomUUID(),
+                      x: Math.random() * (window.innerWidth - 100) + 50,
+                      y: Math.random() * (window.innerHeight - 100) + 50,
+                      value: selectedTier.value,
+                      tier: selectedTier.tier,
+                      spawnedAt: Date.now()
+                  };
+                  
+                  setSpawnedOrbs(prev => [...prev, newOrb]);
+                  
+                  // Remove orb after 15 seconds
+                  setTimeout(() => {
+                      setSpawnedOrbs(prev => prev.filter(o => o.id !== newOrb.id));
+                  }, 15000);
+              };
+              
+              // Spawn orbs every 8-15 seconds
+              const spawnInterval = setInterval(() => {
+                  const delay = Math.random() * 7000 + 8000;
+                  setTimeout(spawnOrb, delay);
+              }, 15000);
+              
+              spawnOrb(); // Initial spawn
+              
+              return () => clearInterval(spawnInterval);
+          }, []);
+          
+          // Check for orb collection
+          useEffect(() => {
+              if (!username) return;
+              
+              const checkCollision = () => {
+                  const playerCenterX = position.x + 24;
+                  const playerCenterY = position.y + 24;
+                  
+                  spawnedOrbs.forEach(orb => {
+                      const orbCenterX = orb.x + 20;
+                      const orbCenterY = orb.y + 20;
+                      
+                      const distance = Math.sqrt(
+                          Math.pow(playerCenterX - orbCenterX, 2) +
+                          Math.pow(playerCenterY - orbCenterY, 2)
+                      );
+                      
+                      if (distance < 40) {
+                          collectOrb(orb);
+                      }
+                  });
+              };
+              
+              const interval = setInterval(checkCollision, 100);
+              return () => clearInterval(interval);
+          }, [position, spawnedOrbs, username]);
+          
+          const collectOrb = async (orb) => {
+              try {
+                  const lower = username.toLowerCase();
+                  const profileRef = ref(db, `profiles/${lower}`);
+                  
+                  await runTransaction(profileRef, (profile) => {
+                      if (profile) {
+                          profile.auraClicks = (profile.auraClicks || 0) + orb.value;
+                      } else {
+                          return {
+                              joinDate: Date.now(),
+                              timeSpent: 0,
+                              auraClicks: orb.value,
+                              character: selectedCharacter,
+                              profileImage: ''
+                          };
+                      }
+                      return profile;
+                  });
+                  
+                  setSpawnedOrbs(prev => prev.filter(o => o.id !== orb.id));
+                  showAnnouncement(`+${orb.value} Aura collected!`, 'info');
+              } catch (err) {
+                  console.error('Failed to collect orb:', err);
+              }
+          };
+          
           useEffect(() => {
               const next = {};
               for (const [id, p] of Object.entries(players || {})) {
@@ -891,6 +1035,11 @@
                   const arr = Object.entries(val).map(([username, count]) => ({ username, count })).sort((a,b) => b.count - a.count);
                   setOrbLeaderboard(arr.slice(0,5));
               });
+              
+              const allEquippedRef = ref(db, 'equipped');
+              onValue(allEquippedRef, snapshot => {
+                  setPlayerEquipped(snapshot.val() || {});
+              });
           }, [username]);
           
           useEffect(() => {
@@ -944,6 +1093,21 @@
                   if (!tagDefs[tagKey]) return alert('Unknown tag');
                   await set(ref(db, `nameTags/${lower}`), tagKey);
                   showAnnouncement(`${targetUsername} was given the ${tagKey} tag by ${username}`, 'info');
+              }
+          };
+          
+          const setUserAura = async (targetUsername, amount) => {
+              if (!username) return alert('Sign in as admin.');
+              if (!adminNames.includes((username || '').toLowerCase())) return alert('Only admins can perform this action.');
+              
+              try {
+                  const lower = targetUsername.toLowerCase();
+                  const profileRef = ref(db, `profiles/${lower}`);
+                  await update(profileRef, { auraClicks: amount });
+                  showAnnouncement(`Set ${targetUsername}'s Aura to ${amount}`, 'info');
+              } catch (err) {
+                  console.error('Failed to set aura:', err);
+                  alert('Failed to set aura amount');
               }
           };
           
@@ -1230,6 +1394,23 @@
               return React.createElement('div', { className: 'name-tag-bar', style: { background: def.color } });
           };
           
+          const getNameTagStyle = (u) => {
+              const lower = (u || '').toLowerCase();
+              const equipped = playerEquipped[lower];
+              if (!equipped || !equipped.nametag) return {};
+              
+              const nameTagStyles = {
+                  'nametag_golden': { color: '#FFD700', textShadow: '0 0 10px #FFD700' },
+                  'nametag_rainbow': { animation: 'rainbow 3s linear infinite' },
+                  'nametag_fire': { color: '#ff4400', textShadow: '0 0 15px #ff4400, 0 0 5px #ff8800' },
+                  'nametag_ice': { color: '#00ffff', textShadow: '0 0 10px #00ffff' },
+                  'nametag_shadow': { color: '#8b00ff', textShadow: '0 0 20px #8b00ff, 0 0 10px #000' },
+                  'nametag_cosmic': { background: 'linear-gradient(90deg, #667eea, #764ba2)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }
+              };
+              
+              return nameTagStyles[equipped.nametag] || {};
+          };
+          
           const hideOrb = showModal || showAdminModal || showFriendsModal || selfModeration;
           
           return React.createElement('div', { className: 'screen' },
@@ -1257,6 +1438,13 @@
                       })
                   )
               ),
+              spawnedOrbs.map(orb => 
+                  React.createElement('div', {
+                      key: orb.id,
+                      className: `aura-orb-spawn tier-${orb.tier}`,
+                      style: { left: `${orb.x}px`, top: `${orb.y}px` }
+                  }, `+${orb.value}`)
+              ),
               Object.entries(renderRef.current).map(([id, p]) =>
                   React.createElement(React.Fragment, { key: id },
                       React.createElement('div', {
@@ -1278,7 +1466,7 @@
                           className: 'username-label' + (p.admin ? ' admin' : ''),
                           style: { left: `${p.x + 24}px`, top: `${p.y + 58}px` }
                       },
-                          React.createElement('span', null, p.username),
+                          React.createElement('span', { style: getNameTagStyle(p.username) }, p.username),
                           renderNameTagBar(p.username, p.admin)
                       ),
                       bubbles[id] ? React.createElement('div', {
@@ -1289,6 +1477,8 @@
               ),
               React.createElement('div', { className: 'hud' },
                   React.createElement('button', { className: 'babies-button', onClick: () => setShowModal(true) }, '👶 Babies'),
+                  React.createElement('button', { className: 'shop-button', onClick: () => window.location.href = 'shop.html' }, '🛒 Shop'),
+                  React.createElement('button', { className: 'inventory-button', onClick: () => window.location.href = 'inventory.html' }, '🎒 Inventory'),
                   React.createElement('button', { className: 'friends-button', onClick: () => setShowFriendsModal(true) }, '👥 Friends'),
                   React.createElement('button', {
                       className: 'profile-button',
@@ -1321,7 +1511,7 @@
                                   onClick: () => deleteMessage(m.id)
                               }, '×'),
                               React.createElement('div', { className: 'chat-meta' },
-                                  React.createElement('div', null, m.username),
+                                  React.createElement('div', { style: getNameTagStyle(m.username) }, m.username),
                                   renderChatTag(m.username)
                               ),
                               React.createElement('div', null, m.text)
@@ -1520,7 +1710,11 @@
                                           } }, 'Unban'),
                                           React.createElement('button', { className: 'small-btn ghost', onClick: () => {
                                               if (window.confirm(`Remove timeout for ${u}?`)) removeModeration(u, 'timeout');
-                                          } }, 'Untimeout')
+                                          } }, 'Untimeout'),
+                                          React.createElement('button', { className: 'small-btn ghost', onClick: () => {
+                                              const amount = window.prompt(`Set Aura amount for ${u}:`, '0');
+                                              if (amount !== null) setUserAura(u, parseInt(amount) || 0);
+                                          } }, 'Set Aura')
                                       )
                                   )
                               )
