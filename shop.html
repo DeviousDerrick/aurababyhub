@@ -113,6 +113,10 @@
             background: linear-gradient(90deg, #8b5cf6, #7c3aed);
         }
         
+        .nav-btn.trade {
+            background: linear-gradient(90deg, #10b981, #059669);
+        }
+        
         .shop-categories {
             display: flex;
             gap: 12px;
@@ -144,6 +148,17 @@
             box-shadow: 0 4px 20px rgba(34,211,238,0.4);
         }
         
+        .category-btn.limited {
+            background: linear-gradient(135deg, #ff0080, #ff8c00);
+            border-color: #ff0080;
+            animation: limitedGlow 2s infinite;
+        }
+        
+        @keyframes limitedGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,0,128,0.4); }
+            50% { box-shadow: 0 0 40px rgba(255,0,128,0.8); }
+        }
+        
         .items-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -163,6 +178,11 @@
             overflow: hidden;
         }
         
+        .item-card.limited {
+            border: 2px solid rgba(255,0,128,0.5);
+            background: linear-gradient(135deg, rgba(255,0,128,0.1), rgba(0,0,0,0.5));
+        }
+        
         .item-card::before {
             content: '';
             position: absolute;
@@ -175,6 +195,10 @@
             transition: opacity 0.3s;
         }
         
+        .item-card.limited::before {
+            background: radial-gradient(circle, rgba(255,0,128,0.2) 0%, transparent 70%);
+        }
+        
         .item-card:hover::before {
             opacity: 1;
         }
@@ -183,6 +207,61 @@
             transform: translateY(-8px);
             border-color: #22d3ee;
             box-shadow: 0 15px 40px rgba(34,211,238,0.4);
+        }
+        
+        .item-card.limited:hover {
+            border-color: #ff0080;
+            box-shadow: 0 15px 40px rgba(255,0,128,0.6);
+        }
+        
+        .limited-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: linear-gradient(135deg, #ff0080, #ff8c00);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(255,0,128,0.5);
+            animation: limitedPulse 2s infinite;
+        }
+        
+        @keyframes limitedPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .stock-info {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        
+        .stock-count {
+            color: #10b981;
+            font-size: 16px;
+        }
+        
+        .stock-count.low {
+            color: #f59e0b;
+        }
+        
+        .stock-count.critical {
+            color: #ef4444;
+            animation: stockBlink 1s infinite;
+        }
+        
+        @keyframes stockBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
         
         .item-preview {
@@ -200,11 +279,22 @@
             border: 2px solid rgba(255,255,255,0.05);
         }
         
+        .item-card.limited .item-preview {
+            background: linear-gradient(135deg, rgba(255,0,128,0.2) 0%, rgba(255,140,0,0.2) 100%);
+        }
+        
         .item-name {
             font-size: 20px;
             font-weight: 800;
             margin-bottom: 10px;
             color: #22d3ee;
+        }
+        
+        .item-card.limited .item-name {
+            background: linear-gradient(90deg, #ff0080, #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .item-description {
@@ -266,6 +356,16 @@
             box-shadow: 0 4px 15px rgba(139,92,246,0.4);
         }
         
+        .edition-badge {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 900;
+            box-shadow: 0 4px 15px rgba(251,191,36,0.5);
+        }
+        
         .modal {
             display: none;
             position: fixed;
@@ -304,6 +404,10 @@
             to { transform: translateY(0); opacity: 1; }
         }
         
+        .modal-content.limited-modal {
+            border-color: #ff0080;
+        }
+        
         .modal-content h2 {
             color: #22d3ee;
             margin-bottom: 25px;
@@ -311,11 +415,36 @@
             font-weight: 900;
         }
         
+        .modal-content.limited-modal h2 {
+            background: linear-gradient(90deg, #ff0080, #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
         .modal-content p {
             margin-bottom: 30px;
             color: #e5e7eb;
             font-size: 16px;
             line-height: 1.6;
+        }
+        
+        .edition-display {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            border: 2px solid rgba(255,0,128,0.5);
+        }
+        
+        .edition-number {
+            font-size: 48px;
+            font-weight: 900;
+            background: linear-gradient(90deg, #ff0080, #ff8c00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 10px 0;
         }
         
         .modal-buttons {
@@ -385,70 +514,6 @@
             background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(0,0,0,0.95));
         }
         
-        /* Effect animations */
-        .effect-sparkle {
-            animation: sparkle 2s infinite;
-        }
-        
-        @keyframes sparkle {
-            0%, 100% { filter: brightness(1) drop-shadow(0 0 5px rgba(251,191,36,0.5)); }
-            50% { filter: brightness(1.5) drop-shadow(0 0 20px rgba(251,191,36,1)); }
-        }
-        
-        .effect-glow {
-            animation: glow 2s infinite;
-        }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: inset 0 0 20px rgba(34,211,238,0.3); }
-            50% { box-shadow: inset 0 0 40px rgba(34,211,238,0.8); }
-        }
-        
-        .effect-rainbow {
-            animation: rainbow 3s linear infinite;
-        }
-        
-        @keyframes rainbow {
-            0% { filter: hue-rotate(0deg); }
-            100% { filter: hue-rotate(360deg); }
-        }
-        
-        .effect-pulse {
-            animation: itemPulse 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes itemPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-        }
-        
-        .effect-lightning {
-            animation: lightning 0.5s infinite;
-        }
-        
-        @keyframes lightning {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(2) drop-shadow(0 0 15px #fbbf24); }
-        }
-        
-        .effect-flames {
-            animation: flames 1s infinite;
-        }
-        
-        @keyframes flames {
-            0%, 100% { filter: hue-rotate(0deg) brightness(1); }
-            50% { filter: hue-rotate(30deg) brightness(1.3); }
-        }
-        
-        .effect-stars {
-            animation: stars 2s infinite;
-        }
-        
-        @keyframes stars {
-            0%, 100% { transform: rotate(0deg); }
-            50% { transform: rotate(180deg); }
-        }
-        
         .loading {
             text-align: center;
             padding: 80px;
@@ -464,6 +529,16 @@
             border-radius: 10px;
             font-weight: 700;
             color: #8b5cf6;
+        }
+        
+        .sold-out {
+            background: rgba(239,68,68,0.2);
+            border: 2px solid #ef4444;
+            color: #ef4444;
+            padding: 12px 28px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 14px;
         }
     </style>
 </head>
@@ -482,6 +557,7 @@
                     <span id="auraBalance">0</span>
                     <span>Aura</span>
                 </div>
+                <button class="nav-btn trade" onclick="location.href='trade.html'">🔄 Trade</button>
                 <button class="nav-btn secondary" onclick="location.href='inventory.html'">🎒 Inventory</button>
                 <button class="nav-btn" onclick="location.href='index.html'">🏠 Back to Hub</button>
             </div>
@@ -489,8 +565,10 @@
         
         <div class="shop-categories">
             <button class="category-btn active" data-category="all">🌟 All Items</button>
+            <button class="category-btn limited" data-category="limiteds">🔥 LIMITEDS</button>
             <button class="category-btn" data-category="nametags">📛 Name Tags</button>
             <button class="category-btn" data-category="effects">✨ Effects</button>
+            <button class="category-btn" data-category="titles">🏆 Titles</button>
             <button class="category-btn" data-category="accessories">🎭 Accessories</button>
         </div>
         
@@ -500,9 +578,10 @@
     </div>
     
     <div id="purchaseModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" id="modalContent">
             <h2>🛒 Confirm Purchase</h2>
             <p id="purchaseText"></p>
+            <div id="editionDisplay"></div>
             <div class="modal-buttons">
                 <button class="modal-btn confirm" id="confirmPurchase">✓ Buy Now</button>
                 <button class="modal-btn cancel" onclick="closePurchaseModal()">✕ Cancel</button>
@@ -534,9 +613,27 @@
         let ownedItems = [];
         let currentCategory = 'all';
         let selectedItem = null;
+        let limitedStocks = {};
         
         const shopItems = [
-            // Name Tags - Premium styles for your username
+            // LIMITEDS - Exclusive 100 stock items
+            { id: 'limited_golden_crown', name: 'Golden Crown of Legends', category: 'limiteds', price: 5000, emoji: '👑', description: 'Ultra rare crown with golden shimmer - Only 100 exist!', limited: true, maxStock: 100 },
+            { id: 'limited_diamond_wings', name: 'Diamond Angel Wings', category: 'limiteds', price: 7500, emoji: '💎', description: 'Crystalline wings that sparkle eternally', limited: true, maxStock: 100 },
+            { id: 'limited_void_aura', name: 'Void Aura', category: 'limiteds', price: 6000, emoji: '🌑', description: 'Consume the darkness itself', limited: true, maxStock: 100 },
+            { id: 'limited_rainbow_halo', name: 'Rainbow Divine Halo', category: 'limiteds', price: 8000, emoji: '🌈', description: 'Blessed by the rainbow gods', limited: true, maxStock: 100 },
+            { id: 'limited_inferno_blade', name: 'Inferno Blade', category: 'limiteds', price: 9000, emoji: '🔥', description: 'Forged in the heart of a dying star', limited: true, maxStock: 100 },
+            { id: 'limited_frost_emperor', name: 'Frost Emperor Title', category: 'limiteds', price: 10000, emoji: '❄️', description: 'Rule the frozen wastelands', limited: true, maxStock: 100 },
+            { id: 'limited_celestial_orb', name: 'Celestial Orb', category: 'limiteds', price: 12000, emoji: '🔮', description: 'Harness the power of the cosmos', limited: true, maxStock: 100 },
+            { id: 'limited_shadow_monarch', name: 'Shadow Monarch', category: 'limiteds', price: 15000, emoji: '👤', description: 'Command the army of shadows', limited: true, maxStock: 100 },
+            { id: 'limited_phoenix_feather', name: 'Phoenix Feather', category: 'limiteds', price: 11000, emoji: '🦅', description: 'Rise from the ashes eternally', limited: true, maxStock: 100 },
+            { id: 'limited_dragon_scales', name: 'Dragon Scale Armor', category: 'limiteds', price: 13000, emoji: '🐉', description: 'Scales from an ancient dragon', limited: true, maxStock: 100 },
+            { id: 'limited_time_keeper', name: 'Time Keeper Watch', category: 'limiteds', price: 14000, emoji: '⌚', description: 'Control the flow of time itself', limited: true, maxStock: 100 },
+            { id: 'limited_galaxy_cape', name: 'Galaxy Cape', category: 'limiteds', price: 16000, emoji: '🌌', description: 'Wear the universe on your shoulders', limited: true, maxStock: 100 },
+            { id: 'limited_thunder_god', name: 'Thunder God Hammer', category: 'limiteds', price: 17000, emoji: '⚡', description: 'Wield the power of lightning', limited: true, maxStock: 100 },
+            { id: 'limited_mystic_eye', name: 'Mystic Third Eye', category: 'limiteds', price: 18000, emoji: '👁️', description: 'See beyond reality itself', limited: true, maxStock: 100 },
+            { id: 'limited_supreme_aura', name: 'Supreme Aura Master', category: 'limiteds', price: 20000, emoji: '✨', description: 'The ultimate aura manifestation', limited: true, maxStock: 100 },
+            
+            // Name Tags
             { id: 'nametag_golden', name: 'Golden Glow', category: 'nametags', price: 500, emoji: '✨', description: 'Your name shines with radiant golden light' },
             { id: 'nametag_rainbow', name: 'Rainbow Wave', category: 'nametags', price: 750, emoji: '🌈', description: 'Mesmerizing rainbow colors that cycle endlessly' },
             { id: 'nametag_fire', name: 'Fire Blaze', category: 'nametags', price: 600, emoji: '🔥', description: 'Burning intensity with fiery red glow' },
@@ -544,7 +641,7 @@
             { id: 'nametag_shadow', name: 'Shadow Strike', category: 'nametags', price: 800, emoji: '🌑', description: 'Mysterious dark purple with deep shadows' },
             { id: 'nametag_cosmic', name: 'Cosmic Energy', category: 'nametags', price: 1000, emoji: '🌌', description: 'Harness the infinite power of the cosmos' },
             
-            // Effects - Animated visual effects
+            // Effects
             { id: 'effect_sparkles', name: 'Sparkle Trail', category: 'effects', price: 1200, emoji: '✨', description: 'Leave magical sparkles wherever you move', effect: 'sparkle' },
             { id: 'effect_glow', name: 'Aura Glow', category: 'effects', price: 1000, emoji: '💫', description: 'Radiant glowing aura surrounds your character', effect: 'glow' },
             { id: 'effect_pulse', name: 'Pulse Wave', category: 'effects', price: 800, emoji: '📡', description: 'Rhythmic energy pulses from your core', effect: 'pulse' },
@@ -552,7 +649,15 @@
             { id: 'effect_flames', name: 'Flame Aura', category: 'effects', price: 1300, emoji: '🔥', description: 'Blazing flames dance around your character', effect: 'flames' },
             { id: 'effect_stars', name: 'Star Power', category: 'effects', price: 1100, emoji: '⭐', description: 'Orbiting stars circle majestically', effect: 'stars' },
             
-            // Accessories - Cosmetic items
+            // Titles
+            { id: 'title_legend', name: 'The Legend', category: 'titles', price: 2000, emoji: '🌟', description: 'Legendary status confirmed' },
+            { id: 'title_godlike', name: 'Godlike', category: 'titles', price: 3000, emoji: '⚡', description: 'Ascend to godlike power' },
+            { id: 'title_omega', name: 'Omega', category: 'titles', price: 1500, emoji: 'Ω', description: 'The final form' },
+            { id: 'title_supreme', name: 'Supreme', category: 'titles', price: 1800, emoji: '👑', description: 'Supreme ruler of all' },
+            { id: 'title_eternal', name: 'Eternal', category: 'titles', price: 2200, emoji: '♾️', description: 'Forever legendary' },
+            { id: 'title_mythic', name: 'Mythic', category: 'titles', price: 2500, emoji: '🔮', description: 'Mythical presence' },
+            
+            // Accessories
             { id: 'acc_crown', name: 'Royal Crown', category: 'accessories', price: 2000, emoji: '👑', description: 'Declare your royalty with this majestic crown' },
             { id: 'acc_wings', name: 'Angel Wings', category: 'accessories', price: 2500, emoji: '👼', description: 'Soar above with heavenly angel wings' },
             { id: 'acc_halo', name: 'Divine Halo', category: 'accessories', price: 1800, emoji: '😇', description: 'A sacred halo floats above your head' },
@@ -578,10 +683,12 @@
             const lower = currentUsername.toLowerCase();
             const profileRef = ref(db, `profiles/${lower}`);
             const inventoryRef = ref(db, `inventory/${lower}`);
+            const stocksRef = ref(db, 'limitedStocks');
             
             try {
                 const profileSnap = await get(profileRef);
                 const inventorySnap = await get(inventoryRef);
+                const stocksSnap = await get(stocksRef);
                 
                 if (profileSnap.exists()) {
                     const profile = profileSnap.val();
@@ -593,6 +700,18 @@
                     ownedItems = Object.keys(inventorySnap.val());
                 }
                 
+                if (stocksSnap.exists()) {
+                    limitedStocks = stocksSnap.val();
+                } else {
+                    // Initialize limited stocks
+                    const initialStocks = {};
+                    shopItems.filter(item => item.limited).forEach(item => {
+                        initialStocks[item.id] = { sold: 0, owners: {} };
+                    });
+                    await set(stocksRef, initialStocks);
+                    limitedStocks = initialStocks;
+                }
+                
                 renderShop();
             } catch (err) {
                 console.error('Failed to load user data:', err);
@@ -600,18 +719,41 @@
             }
         }
         
+        function getStockRemaining(itemId) {
+            const item = shopItems.find(i => i.id === itemId);
+            if (!item || !item.limited) return null;
+            const stock = limitedStocks[itemId] || { sold: 0 };
+            return item.maxStock - stock.sold;
+        }
+        
         function renderShop() {
             const container = document.getElementById('itemsContainer');
-            const filteredItems = currentCategory === 'all' 
-                ? shopItems 
-                : shopItems.filter(item => item.category === currentCategory);
+            let filteredItems = shopItems;
+            
+            if (currentCategory !== 'all') {
+                filteredItems = shopItems.filter(item => item.category === currentCategory);
+            }
             
             container.innerHTML = filteredItems.map(item => {
                 const owned = ownedItems.includes(item.id);
                 const canAfford = userAura >= item.price;
+                const isLimited = item.limited;
+                const stockRemaining = isLimited ? getStockRemaining(item.id) : null;
+                const soldOut = isLimited && stockRemaining <= 0;
+                
+                let stockClass = '';
+                if (stockRemaining !== null) {
+                    if (stockRemaining <= 10) stockClass = 'critical';
+                    else if (stockRemaining <= 30) stockClass = 'low';
+                }
                 
                 return `
-                    <div class="item-card" onclick="openPurchaseModal('${item.id}')">
+                    <div class="item-card ${isLimited ? 'limited' : ''}" onclick="openPurchaseModal('${item.id}')">
+                        ${isLimited ? '<div class="limited-badge">⭐ LIMITED</div>' : ''}
+                        ${isLimited ? `<div class="stock-info">
+                            <div>Stock Remaining</div>
+                            <div class="stock-count ${stockClass}">${stockRemaining}/${item.maxStock}</div>
+                        </div>` : ''}
                         <div class="item-preview ${item.effect ? 'effect-' + item.effect : ''}">
                             <span>${item.emoji}</span>
                         </div>
@@ -623,10 +765,12 @@
                                 <span>${item.price}</span>
                             </div>
                             ${owned 
-                                ? '<div class="owned-badge">✓ OWNED</div>' 
-                                : `<button class="buy-btn" ${!canAfford ? 'disabled' : ''} onclick="event.stopPropagation()">
-                                    ${canAfford ? 'Buy Now' : 'Not Enough Aura'}
-                                   </button>`
+                                ? `<div class="edition-badge">#${limitedStocks[item.id]?.owners?.[currentUsername.toLowerCase()] || 'N/A'}</div>` 
+                                : soldOut
+                                    ? '<div class="sold-out">SOLD OUT</div>'
+                                    : `<button class="buy-btn" ${!canAfford ? 'disabled' : ''} onclick="event.stopPropagation()">
+                                        ${canAfford ? 'Buy Now' : 'Not Enough Aura'}
+                                       </button>`
                             }
                         </div>
                     </div>
@@ -643,16 +787,47 @@
                 return;
             }
             
+            if (item.limited) {
+                const stockRemaining = getStockRemaining(itemId);
+                if (stockRemaining <= 0) {
+                    showNotification('This limited is sold out!', 'error');
+                    return;
+                }
+            }
+            
             if (userAura < item.price) {
                 showNotification('Not enough Aura! Keep clicking the orb!', 'error');
                 return;
             }
             
             selectedItem = item;
-            document.getElementById('purchaseText').innerHTML = `
-                Purchase <strong>${item.emoji} ${item.name}</strong> for <strong>💎 ${item.price} Aura</strong>?<br><br>
-                After purchase, you will have <strong>💎 ${userAura - item.price} Aura</strong> remaining.
-            `;
+            const modalContent = document.getElementById('modalContent');
+            
+            if (item.limited) {
+                const nextEdition = (limitedStocks[item.id]?.sold || 0) + 1;
+                modalContent.classList.add('limited-modal');
+                document.getElementById('purchaseText').innerHTML = `
+                    Purchase <strong>${item.emoji} ${item.name}</strong> for <strong>💎 ${item.price} Aura</strong>?<br><br>
+                    You will receive edition:
+                `;
+                document.getElementById('editionDisplay').innerHTML = `
+                    <div class="edition-display">
+                        <div style="font-size: 14px; color: #9ca3af;">Edition Number</div>
+                        <div class="edition-number">#${nextEdition}/100</div>
+                        <div style="font-size: 12px; color: #cbd5e1;">
+                            ${nextEdition <= 10 ? '🔥 ULTRA RARE!' : nextEdition <= 30 ? '⭐ VERY RARE!' : nextEdition <= 50 ? '✨ RARE' : '💎 Limited Edition'}
+                        </div>
+                    </div>
+                `;
+            } else {
+                modalContent.classList.remove('limited-modal');
+                document.getElementById('purchaseText').innerHTML = `
+                    Purchase <strong>${item.emoji} ${item.name}</strong> for <strong>💎 ${item.price} Aura</strong>?<br><br>
+                    After purchase, you will have <strong>💎 ${userAura - item.price} Aura</strong> remaining.
+                `;
+                document.getElementById('editionDisplay').innerHTML = '';
+            }
+            
             document.getElementById('purchaseModal').classList.add('active');
         };
         
@@ -671,36 +846,86 @@
             try {
                 const lower = currentUsername.toLowerCase();
                 
-                // Deduct aura
-                const profileRef = ref(db, `profiles/${lower}`);
-                await runTransaction(profileRef, (profile) => {
-                    if (profile && profile.auraClicks >= selectedItem.price) {
-                        profile.auraClicks -= selectedItem.price;
-                        return profile;
+                if (selectedItem.limited) {
+                    // Handle limited purchase with transaction
+                    const stockRef = ref(db, `limitedStocks/${selectedItem.id}`);
+                    
+                    const result = await runTransaction(stockRef, (stock) => {
+                        if (!stock) {
+                            stock = { sold: 0, owners: {} };
+                        }
+                        
+                        if (stock.sold >= selectedItem.maxStock) {
+                            return; // Abort - sold out
+                        }
+                        
+                        stock.sold += 1;
+                        stock.owners[lower] = stock.sold;
+                        return stock;
+                    });
+                    
+                    if (!result.committed) {
+                        throw new Error('Item sold out during purchase!');
                     }
-                    return;
-                });
-                
-                // Add to inventory
-                const inventoryItemRef = ref(db, `inventory/${lower}/${selectedItem.id}`);
-                await set(inventoryItemRef, {
-                    purchasedAt: Date.now(),
-                    name: selectedItem.name,
-                    category: selectedItem.category,
-                    emoji: selectedItem.emoji
-                });
+                    
+                    const editionNumber = result.snapshot.val().owners[lower];
+                    
+                    // Deduct aura
+                    const profileRef = ref(db, `profiles/${lower}`);
+                    await runTransaction(profileRef, (profile) => {
+                        if (profile && profile.auraClicks >= selectedItem.price) {
+                            profile.auraClicks -= selectedItem.price;
+                            return profile;
+                        }
+                        return;
+                    });
+                    
+                    // Add to inventory with edition number
+                    const inventoryItemRef = ref(db, `inventory/${lower}/${selectedItem.id}`);
+                    await set(inventoryItemRef, {
+                        purchasedAt: Date.now(),
+                        name: selectedItem.name,
+                        category: selectedItem.category,
+                        emoji: selectedItem.emoji,
+                        limited: true,
+                        edition: editionNumber
+                    });
+                    
+                    limitedStocks = result.snapshot.val();
+                    showNotification(`✓ Successfully purchased ${selectedItem.name} #${editionNumber}/100!`, 'success');
+                    
+                } else {
+                    // Regular item purchase
+                    const profileRef = ref(db, `profiles/${lower}`);
+                    await runTransaction(profileRef, (profile) => {
+                        if (profile && profile.auraClicks >= selectedItem.price) {
+                            profile.auraClicks -= selectedItem.price;
+                            return profile;
+                        }
+                        return;
+                    });
+                    
+                    const inventoryItemRef = ref(db, `inventory/${lower}/${selectedItem.id}`);
+                    await set(inventoryItemRef, {
+                        purchasedAt: Date.now(),
+                        name: selectedItem.name,
+                        category: selectedItem.category,
+                        emoji: selectedItem.emoji
+                    });
+                    
+                    showNotification(`✓ Successfully purchased ${selectedItem.name}!`, 'success');
+                }
                 
                 userAura -= selectedItem.price;
                 ownedItems.push(selectedItem.id);
                 
-                showNotification(`✓ Successfully purchased ${selectedItem.name}!`, 'success');
                 closePurchaseModal();
                 renderShop();
                 document.getElementById('auraBalance').textContent = userAura;
                 
             } catch (err) {
                 console.error('Purchase failed:', err);
-                showNotification('Purchase failed. Please try again.', 'error');
+                showNotification(err.message || 'Purchase failed. Please try again.', 'error');
             } finally {
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = '✓ Buy Now';
